@@ -20,18 +20,13 @@
 
 (deffunction minimoSimple (?num1 ?num2)
   ;Dados dos números como parámetros, devuelve el menor.
-  (if (> ?num1 ?num2)
-    then (printout t ?num2 crlf)
-    else (printout t ?num1 crlf)
-  )
+  (return (min ?a ?b))
+
 )
 
 (deffunction maximoSimple (?num1 ?num2)
   ;Dados dos números como parámetros, devuelve el mayor.
-  (if (< ?num1 ?num2)
-    then (printout t ?num2 crlf)
-    else (printout t ?num1 crlf)
-  )
+  (return (max ?a ?b))
 )
 
 (deffunction iguales (?num1 ?num2)
