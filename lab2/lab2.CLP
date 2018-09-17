@@ -81,9 +81,23 @@
 
 )
 
-(deffunction factorial (?num)
+(deffunction factorialN (?num)
   ;Devuelve el factorial del número pasado como parámetro.
+	(bind ?result 1)
+	(bind ?i 1)
+  (loop-for-count (?i 1 ?num)
+	 	(bind ?result (* ?result ?i))
+  )
+	(printout t ?result crlf)
+)
 
+(deffunction factorialR (?num)
+  ;Devuelve el factorial del número pasado como parámetro.
+	(if (<= ?num 1) then
+		(return 1)
+	else
+		(return (* (factorialR (- ?num 1)) ?num))
+	)
 )
 
 (deffunction fibonacci (?num)
