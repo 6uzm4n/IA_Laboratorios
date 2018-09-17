@@ -2,12 +2,35 @@
 
 (deffunction cuentaAtras (?num)
   ;Devuelve una cuenta atrás desde el número que se pasa como parámetro.
-
+	
+	(if (integerp ?num) 
+		then 
+			(bind ?cont ?num)
+			(while (> ?cont 0) 
+				(printout t ?cont )
+				(bind ?cont (- ?cont 1))
+			)
+			(printout t " " crlf)
+		else
+			(printout t "Mete un numero" crlf)
+	)
 )
 
 (deffunction hasta (?num)
   ;Devuelve una secuencia de números hasta el que se pasa como parámetro.
 
+  (if (integerp ?num) 
+		then 
+			(bind ?cont 0)
+			(while (< ?cont ?num) 
+				(printout t ?cont )
+				(bind ?cont (+ ?cont 1))
+			)
+			(printout t " " crlf)
+		else
+			(printout t "Mete un numero" crlf)
+	)
+  
 )
 
 (deffunction sumatorio (?num)
