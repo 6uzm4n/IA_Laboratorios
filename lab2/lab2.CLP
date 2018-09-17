@@ -42,6 +42,30 @@
   )
 )
 
+;----------------------------------------
+(deffunction todosNumeros ($?mult)
+	;Devuelve TRUE si todos los campos son integer, si no FALSE
+	(bind ?cont 1)
+	(bind ?end 0)
+	(while (and (= ?end 0) (< ?cont (+ (length$ ?mult) 1) ) )
+		(bind ?act (nth$ ?cont ?mult) )
+		(if (not (integerp ?act) )
+			then
+				(bind ?end 1)
+			else
+				(bind ?cont (+ ?cont 1) )
+		)
+	)
+	(if (= ?end 0)
+		then
+			(return TRUE)
+		else
+			(return FALSE)
+	)
+)
+	
+;------------------------------------------
+	
 (deffunction minimoMulti (?num)
   ;Devuelve el elemento más pequeño del multicampo pasado como parámetro.
 
@@ -52,12 +76,15 @@
 
 )
 
-(deffunction sumaMulti (?num)
+(deffunction sumaMulti ($?mult)
   ;Calcula la suma de todos los elementos del multicampo pasado como parámetro.
 
+	(return (length $?mult))
+  
+  
 )
 
-(deffunction mediaMulti (?num)
+(deffunction mediaMulti ($?mult)
 ;Calcula la media de todos los elementos del multicampo pasado como parámetro.
 
 )
