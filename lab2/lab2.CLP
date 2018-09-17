@@ -42,8 +42,18 @@
   )
 )
 
-(deffunction minimoMulti (?num)
+(deffunction minimoMulti ($?serie)
   ;Devuelve el elemento más pequeño del multicampo pasado como parámetro.
+  (bind ?cont 1)
+	(bind ?min 999999999)
+	(while (<= ?cont (length$ ?serie)) 
+		(if (> ?min (nth$ ?cont ?serie) )
+			then
+				(bind ?min (nth$ ?cont ?serie) )
+		)
+	(bind ?cont (+ ?cont 1))
+	)
+	(printout t "Min----->" ?min "<----" crlf)
 
 )
 
