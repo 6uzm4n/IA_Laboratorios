@@ -78,22 +78,44 @@
 
 (deffunction minimoMulti ($?serie)
   ;Devuelve el elemento más pequeño del multicampo pasado como parámetro.
-  (bind ?cont 1)
-	(bind ?min 999999999)
-	(while (<= ?cont (length$ ?serie)) 
-		(if (> ?min (nth$ ?cont ?serie) )
-			then
-				(bind ?min (nth$ ?cont ?serie) )
-		)
-	(bind ?cont (+ ?cont 1))
+  (if	(not (todosNumeros ?serie))
+		then
+			(printout t "No todos los elementos son numeros!!" crlf)
+		
+		else
+			(bind ?cont 1)
+			(bind ?min 999999999)
+			(while (<= ?cont (length$ ?serie)) 
+				(if (> ?min (nth$ ?cont ?serie) )
+					then
+						(bind ?min (nth$ ?cont ?serie) )
+				)
+			(bind ?cont (+ ?cont 1))
+			)
+			(printout t "Min----->" ?min "<----" crlf)
 	)
-	(printout t "Min----->" ?min "<----" crlf)
-
 )
 
-(deffunction maximoMulti (?num)
-;Devuelve el elemento más grande del multicampo pasado como parámetro.
 
+
+(deffunction maximoMulti ($?serie)
+;Devuelve el elemento más grande del multicampo pasado como parámetro.
+	(if	(not (todosNumeros ?serie))
+		then
+			(printout t "No todos los elementos son numeros!!" crlf)
+		
+		else
+			(bind ?cont 1)
+			(bind ?max -999999999)
+			(while (<= ?cont (length$ ?serie)) 
+				(if (< ?max (nth$ ?cont ?serie) )
+					then
+						(bind ?max (nth$ ?cont ?serie) )
+				)
+			(bind ?cont (+ ?cont 1))
+			)
+			(printout t "Max----->" ?max "<----" crlf)
+	)
 )
 
 (deffunction sumaMulti ($?mult)
