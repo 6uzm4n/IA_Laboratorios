@@ -79,14 +79,28 @@
 (deffunction sumaMulti ($?mult)
   ;Calcula la suma de todos los elementos del multicampo pasado como parámetro.
 
-	(return (length $?mult))
-  
-  
+	(if (not(todosNumeros ?mult))
+		then
+			(printout t "Mete todo numeros e intenta otra vez" crlf )
+		else
+			(bind ?sum 0)
+			(bind ?cont 1)
+			(while (<= ?cont (length$ ?mult))
+				(bind ?sum (+ ?sum (nth$ ?cont ?mult) ) )
+				(bind ?cont (+ ?cont 1))
+			
+			)
+			(return ?sum )
+	)
 )
 
 (deffunction mediaMulti ($?mult)
-;Calcula la media de todos los elementos del multicampo pasado como parámetro.
-
+	;Calcula la media de todos los elementos del multicampo pasado como parámetro.
+	(if (todosNumeros ?mult)
+		then
+			(bind ?sum (sumaMulti ?mult) )
+			(return (/ ?sum (length$ ?mult) ) )
+	)
 )
 
 (deffunction switchin (?num)
