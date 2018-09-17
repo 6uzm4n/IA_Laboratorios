@@ -49,24 +49,100 @@
   )
 )
 
-(deffunction minimoMulti (?num)
+
+;----------------------------------------
+
+(deffunction todosNumeros ($?mult)
+	;Devuelve TRUE si todos los campos son integer, si no FALSE
+	(bind ?cont 1)
+	(bind ?end 0)
+	(while (and (= ?end 0) (< ?cont (+ (length$ ?mult) 1) ) )
+		(bind ?act (nth$ ?cont ?mult) )
+		(if (not (integerp ?act) )
+			then
+				(bind ?end 1)
+			else
+				(bind ?cont (+ ?cont 1) )
+		)
+	)
+	(if (= ?end 0)
+		then
+			(return TRUE)
+		else
+			(return FALSE)
+	)
+)
+	
+;------------------------------------------
+	
+
+(deffunction minimoMulti ($?serie)
   ;Devuelve el elemento más pequeño del multicampo pasado como parámetro.
-
+  (if	(not (todosNumeros ?serie))
+		then
+			(printout t "No todos los elementos son numeros!!" crlf)
+		
+		else
+			(bind ?cont 1)
+			(bind ?min 999999999)
+			(while (<= ?cont (length$ ?serie)) 
+				(if (> ?min (nth$ ?cont ?serie) )
+					then
+						(bind ?min (nth$ ?cont ?serie) )
+				)
+			(bind ?cont (+ ?cont 1))
+			)
+			(printout t "Min----->" ?min "<----" crlf)
+	)
 )
 
-(deffunction maximoMulti (?num)
+
+
+(deffunction maximoMulti ($?serie)
 ;Devuelve el elemento más grande del multicampo pasado como parámetro.
-
+	(if	(not (todosNumeros ?serie))
+		then
+			(printout t "No todos los elementos son numeros!!" crlf)
+		
+		else
+			(bind ?cont 1)
+			(bind ?max -999999999)
+			(while (<= ?cont (length$ ?serie)) 
+				(if (< ?max (nth$ ?cont ?serie) )
+					then
+						(bind ?max (nth$ ?cont ?serie) )
+				)
+			(bind ?cont (+ ?cont 1))
+			)
+			(printout t "Max----->" ?max "<----" crlf)
+	)
 )
 
-(deffunction sumaMulti (?num)
+(deffunction sumaMulti ($?mult)
   ;Calcula la suma de todos los elementos del multicampo pasado como parámetro.
 
+	(if (not(todosNumeros ?mult))
+		then
+			(printout t "Mete todo numeros e intenta otra vez" crlf )
+		else
+			(bind ?sum 0)
+			(bind ?cont 1)
+			(while (<= ?cont (length$ ?mult))
+				(bind ?sum (+ ?sum (nth$ ?cont ?mult) ) )
+				(bind ?cont (+ ?cont 1))
+			
+			)
+			(return ?sum )
+	)
 )
 
-(deffunction mediaMulti (?num)
-;Calcula la media de todos los elementos del multicampo pasado como parámetro.
-
+(deffunction mediaMulti ($?mult)
+	;Calcula la media de todos los elementos del multicampo pasado como parámetro.
+	(if (todosNumeros ?mult)
+		then
+			(bind ?sum (sumaMulti ?mult) )
+			(return (/ ?sum (length$ ?mult) ) )
+	)
 )
 
 (deffunction switchin (?num)
