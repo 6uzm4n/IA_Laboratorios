@@ -2,11 +2,10 @@
 
 (deffunction cuentaAtras (?num)
   ;Devuelve una cuenta atrás desde el número que se pasa como parámetro.
-	
-	(if (integerp ?num) 
-		then 
+	(if (integerp ?num)
+		then
 			(bind ?cont ?num)
-			(while (> ?cont 0) 
+			(while (> ?cont 0)
 				(printout t ?cont )
 				(bind ?cont (- ?cont 1))
 			)
@@ -18,11 +17,10 @@
 
 (deffunction hasta (?num)
   ;Devuelve una secuencia de números hasta el que se pasa como parámetro.
-
-  (if (integerp ?num) 
-		then 
+  (if (integerp ?num)
+		then
 			(bind ?cont 0)
-			(while (< ?cont ?num) 
+			(while (< ?cont ?num)
 				(printout t ?cont )
 				(bind ?cont (+ ?cont 1))
 			)
@@ -30,10 +28,19 @@
 		else
 			(printout t "Mete un numero" crlf)
 	)
-  
 )
 
-(deffunction sumatorio (?num)
+(deffunction sumatorioN (?num)
+  ;Calcula el sumatorio de número que se pase como parámetro y todos sus anteriores.
+	(bind ?result 0)
+	(bind ?i 0)
+  (loop-for-count (?i 0 ?num)
+	 	(bind ?result (+ ?result ?i))
+  )
+	(printout t ?result crlf)
+)
+
+(deffunction sumatorioR (?num)
   ;Calcula el sumatorio de número que se pase como parámetro y todos sus anteriores.
   (if (= ?num 1) then
     (return 1)
@@ -42,7 +49,9 @@
   )
 )
 
+
 ;----------------------------------------
+
 (deffunction todosNumeros ($?mult)
 	;Devuelve TRUE si todos los campos son integer, si no FALSE
 	(bind ?cont 1)
@@ -66,8 +75,19 @@
 	
 ;------------------------------------------
 	
-(deffunction minimoMulti (?num)
+
+(deffunction minimoMulti ($?serie)
   ;Devuelve el elemento más pequeño del multicampo pasado como parámetro.
+  (bind ?cont 1)
+	(bind ?min 999999999)
+	(while (<= ?cont (length$ ?serie)) 
+		(if (> ?min (nth$ ?cont ?serie) )
+			then
+				(bind ?min (nth$ ?cont ?serie) )
+		)
+	(bind ?cont (+ ?cont 1))
+	)
+	(printout t "Min----->" ?min "<----" crlf)
 
 )
 
@@ -115,9 +135,23 @@
 
 )
 
-(deffunction factorial (?num)
+(deffunction factorialN (?num)
   ;Devuelve el factorial del número pasado como parámetro.
+	(bind ?result 1)
+	(bind ?i 1)
+  (loop-for-count (?i 1 ?num)
+	 	(bind ?result (* ?result ?i))
+  )
+	(printout t ?result crlf)
+)
 
+(deffunction factorialR (?num)
+  ;Devuelve el factorial del número pasado como parámetro.
+	(if (<= ?num 1) then
+		(return 1)
+	else
+		(return (* (factorialR (- ?num 1)) ?num))
+	)
 )
 
 (deffunction fibonacci (?num)
