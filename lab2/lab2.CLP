@@ -11,8 +11,12 @@
 )
 
 (deffunction sumatorio (?num)
-  ;Calcula el sumatorio del número que se pase como parámetro.
-
+  ;Calcula el sumatorio de número que se pase como parámetro y todos sus anteriores.
+  (if (= ?num 1) then
+    (return 1)
+  else
+    (return (+ (sumatorio (- ?num 1)) ?num))
+  )
 )
 
 (deffunction minimoMulti (?num)
