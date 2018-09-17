@@ -45,7 +45,7 @@
   (if (= ?num 1) then
     (return 1)
   else
-    (return (+ (sumatorio (- ?num 1)) ?num))
+    (return (+ (sumatorioR (- ?num 1)) ?num))
   )
 )
 
@@ -102,5 +102,23 @@
 
 (deffunction fibonacci (?num)
   ;Dado un número como parámetro, devuelve los primeros n números de la serie de Fibonacci.
+	(bind $?result 0)
+	(bind ?i 1)
+  (loop-for-count (?i 1 ?num)
+	 	(bind $?result $?result (fibonacciAux ?i))
+  )
+	(printout t ?result crlf)
+)
 
+(deffunction fibonacciAux (?num)
+  ;Dado un número como parámetro, devuelve el número en esa posición de la serie de Fibonacci.
+	(if (<= ?num 0) then
+		(return 0)
+	else
+		(if (= ?num 1) then
+			(return 1)
+		else
+			(return (+ (fibonacciAux (- ?num 2)) (fibonacciAux (- ?num 1))))
+		)
+	)
 )
