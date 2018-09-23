@@ -1,10 +1,13 @@
 ;LABORATORIO 1 INTELIGENCIA ARTIFICIAL
 
+-----------------------------------------------------------
 ;Funciones auxiliares
+
 (deffunction isNumber(?var)
   ;Devuelve TRUE en caso de que el parámetro sea un número.
   (return (or (integerp ?var) (floatp ?var)))
 )
+-----------------------------------------------------------
 
 
 (deffunction suma (?sum1 ?sum2)
