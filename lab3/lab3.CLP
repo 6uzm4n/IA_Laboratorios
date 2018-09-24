@@ -111,22 +111,62 @@
 
 (deffunction primo (?num)
 	;Devuelve TRUE en caso de que el número introducido sea primo, FALSE en caso contrario.
-
+  (if (isNumber ?num) then
+    (bind ?i 2)
+    (bind ?primo TRUE)
+    (bind ?sqrt (sqrt ?num))
+    (loop-for-count (?i 2 ?sqrt)
+      (if (= (mod ?num ?i) 0) then
+        (bind ?primo FALSE)
+      )
+    )
+    return ?primo
+  else
+    (printout t "Los valores introducidos no son validos." crlf)
+  )
 )
 
 (deffunction capicua (?num)
 	;Devuelve TRUE en caso de que el número introducido sea capicúa, FALSE en caso contrario.
-
+  (if (isNumber ?num) then
+    (bind ?inv 0)
+    (bind ?aux ?num)
+    (while (not (= ?aux 0))
+      (bind ?inv (+ (* ?inv 10) (mod ?aux 10)))
+      (bind ?aux (div ?aux 10))
+    )
+    (return (= ?num ?inv))
+  else
+    (printout t "Los valores introducidos no son validos." crlf)
+  )
 )
 
 (deffunction num_primos_y_capicua (?num)
 	;Devuelve TRUE en caso de que el número introducido sea primo y capicúa, FALSE en caso contrario.
-
+  (if (isNumber ?num) then
+    (return (and (primo ?num) (capicua ?num)))
+  else
+    (printout t "Los valores introducidos no son validos." crlf)
+  )
 )
 
-(deffunction num_magico (?num1 ?num2)
+(deffunction num_magico (?num)
 	;Dado un número como parámetro, sumará todas sus cifras hasta que el resultado final sea de una sola cifra.
-
+  (if (isNumber ?num) then
+    (bind ?magico 0)
+    (bind ?aux ?num)
+    (while (not (= ?aux 0))
+      (bind ?magico (+ ?magico (mod ?aux 10)))
+      (bind ?aux (div ?aux 10))
+    )
+    (if (>= ?magico 10) then
+      (num_magico ?magico)
+    else
+      (return ?magico)
+    )
+  else
+    (printout t "Los valores introducidos no son validos." crlf)
+  )
 )
 
 (deffunction esMedio (?num)
