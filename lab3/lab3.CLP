@@ -1,5 +1,14 @@
 ;LABORATORIO 2 INTELIGENCIA ARTIFICIAL
 
+-----------------------------------------------------------
+;Funciones auxiliares
+
+(deffunction isNumber(?var)
+  ;Devuelve TRUE en caso de que el parámetro sea un número.
+  (return (or (integerp ?var) (floatp ?var)))
+)
+-----------------------------------------------------------
+
 (deffunction dentroDelRango (?num1 ?num2)
 	;Después de recibir dos números como parámetros, pedirá números al usuario hasta que uno de ellos esté en el rango entre los dos parámetros.
 
