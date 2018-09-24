@@ -56,6 +56,10 @@
 	;Devuelve TRUE si todos los campos son integer, si no FALSE
 	(bind ?cont 1)
 	(bind ?end 0)
+	(if (= (length$ ?mult) 0)
+		then
+			(bind ?end 1)
+	)
 	(while (and (= ?end 0) (< ?cont (+ (length$ ?mult) 1) ) )
 		(bind ?act (nth$ ?cont ?mult) )
 		(if (not (integerp ?act) )
