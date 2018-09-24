@@ -149,16 +149,46 @@
 	)
 )
 
-(deffunction switchin (?num)
-  ;Si el primer parámetro es 1, calcula el máximo de todos los elementos del multicampo pasado como parámetro.
-  ;Si el primer parámetro es 2, calcula el mínimo de todos los elementos del multicampo pasado como parámetro.
-
-
+(deffunction switchin ( ?num $?serie)
+  (if	(not (todosNumeros ?serie))
+		then
+			(printout t "No todos los elementos son numeros!!" crlf)
+		
+		else
+			(if (integerp ?num)
+				then
+					(if (= ?num 1)
+						then
+							(maximoMulti $?serie)
+						else 
+							(if (= ?num 2)
+								then
+									(minimoMulti $?serie)
+								else
+								(printout t "La elección debe ser 1 o 2" crlf)
+							)
+					)
+			)
+	)
 )
 
-(deffunction multiplicarElemento (?num)
-  ;Dado un número y un elemento multicampo como parámetro, devuelve el multicampo tras multiplicar cada valor por el número dado.
-
+(deffunction multiplicarElemento ( ?num $?serie)
+  (if	(not (todosNumeros ?serie))
+		then
+			(printout t "No todos los elementos son numeros!!" crlf)
+		
+		else
+			(if (integerp ?num)
+				then
+					(bind ?cont 1)
+					(while (< ?cont (+ (length$ ?serie) 1) ) 
+						(bind ?act (*(nth$ ?cont ?serie) ?num))
+						(bind ?serie (replace$ ?serie ?cont ?cont ?act ))
+						(bind ?cont (+ ?cont 1))
+					)
+					(printout t ?serie crlf)
+			)
+	)
 )
 
 (deffunction factorialN (?num)
