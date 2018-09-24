@@ -172,9 +172,23 @@
 	)
 )
 
-(deffunction multiplicarElemento (?num)
-  ;Dado un número y un elemento multicampo como parámetro, devuelve el multicampo tras multiplicar cada valor por el número dado.
-
+(deffunction multiplicarElemento ( ?num $?serie)
+  (if	(not (todosNumeros ?serie))
+		then
+			(printout t "No todos los elementos son numeros!!" crlf)
+		
+		else
+			(if (integerp ?num)
+				then
+					(bind ?cont 1)
+					(while (< ?cont (+ (length$ ?serie) 1) ) 
+						(bind ?act (*(nth$ ?cont ?serie) ?num))
+						(bind ?serie (replace$ ?serie ?cont ?cont ?act ))
+						(bind ?cont (+ ?cont 1))
+					)
+					(printout t ?serie crlf)
+			)
+	)
 )
 
 (deffunction factorialN (?num)
