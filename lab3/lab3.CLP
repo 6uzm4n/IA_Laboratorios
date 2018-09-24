@@ -105,9 +105,23 @@
   )
 )
 
-(deffunction num_magico (?num1 ?num2)
+(deffunction num_magico (?num)
 	;Dado un número como parámetro, sumará todas sus cifras hasta que el resultado final sea de una sola cifra.
-
+  (if (isNumber ?num) then
+    (bind ?magico 0)
+    (bind ?aux ?num)
+    (while (not (= ?aux 0))
+      (bind ?magico (+ ?magico (mod ?aux 10)))
+      (bind ?aux (div ?aux 10))
+    )
+    (if (>= ?magico 10) then
+      (num_magico ?magico)
+    else
+      (return ?magico)
+    )
+  else
+    (printout t "Los valores introducidos no son validos." crlf)
+  )
 )
 
 (deffunction esMedio (?num)
