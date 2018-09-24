@@ -64,14 +64,44 @@
 
 )
 
-(deffunction mcd (?num1 ?num2)
-	;Calcula el máximo común divisor de los dos parámetros recibidos.
-
+(deffunction mcd ( ?a ?b)
+  	(if (integerp ?a)
+		then
+			(if (integerp ?b)
+				then
+					(if (= ?a ?b)
+						then 
+							(printout t "mcd =" ?a crlf)
+							(return ?a)
+						else
+							(if (< ?a ?b )
+								then
+									(mcd ?a(- ?b ?a))
+								else
+									(mcd (- ?a ?b) ?b)
+							)
+					)
+				else
+					(printout t "El elemento Nº2 no es válido" crlf)
+			)
+		else
+			(printout t "El elemento Nº1 no es válido" crlf)
+	)
 )
 
-(deffunction mcm (?num1 ?num2)
-	;Calcula el mínimo común múltiplo de los dos números recibidos.
-
+(deffunction mcm (?a ?b)
+	(if (integerp ?a)
+		then
+			(if (integerp ?b)
+				then
+					(bind ?sol (div (* ?a ?b) (mcd ?a ?b)))
+					(printout t "mcm=" ?sol crlf)
+				else
+					(printout t "El elemento Nº2 no es válido" crlf)
+			)
+		else
+			(printout t "El elemento Nº1 no es válido" crlf)
+	)
 )
 
 (deffunction mes (?num)
