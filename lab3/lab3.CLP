@@ -9,9 +9,54 @@
 )
 -----------------------------------------------------------
 
-(deffunction dentroDelRango (?num1 ?num2)
-	;Después de recibir dos números como parámetros, pedirá números al usuario hasta que uno de ellos esté en el rango entre los dos parámetros.
-
+(deffunction entre (?opc ?a ?b ?num)
+	(switch ?opc 
+		(case 0 then
+			(if (and (>= ?num ?a) (<= ?num ?b) ) 
+				then
+					 
+					(return TRUE)
+				else
+					(printout t ?num " no esta entre " ?a " y " ?b " " crlf)
+					(return FALSE)
+			)
+		)	
+		(case 1 then
+			
+			(if (and (>= ?num ?b) (<= ?num ?a) ) 
+				then
+					(return TRUE)
+				else
+					(printout t ?num " no esta entre " ?b " y " ?a " " crlf)
+					(return FALSE)
+			)
+		)	
+	)
+)
+			
+(deffunction dentroDelRango (?a ?b)
+	
+	(while (not(integerp ?a))
+		(printout t "Mete un núamero para el primer parámetro" crlf)
+			(bind ?a (read))
+	)
+	(while (not(integerp ?b))
+		(printout t "Mete un núamero para el segundo parámetro" crlf)
+			(bind ?b (read))
+	)	
+	(bind ?opc 1)
+	(if (< ?a ?b)
+		then 
+			(bind ?opc 0)
+	)
+	(bind ?num s)
+	(bind ?entre FALSE)
+	(while (not ?entre)
+		(printout t "Mete un número que esté entre los dos parámetros" crlf)
+		(bind ?num (read))
+		(bind ?entre (entre ?opc ?a ?b ?num))
+	)
+	(printout t "Felicidades." crlf)
 )
 
 (deffunction acertijo (?num1 ?num2)
