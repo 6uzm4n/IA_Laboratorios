@@ -126,5 +126,48 @@
 
 (deffunction esMedio (?num)
 	;Dado un número como parámetro, devuelve TRUE si este es medio, FALSE en caso contrario.
+  (if (isNumber ?num) then
+    (bind ?sum 0)
+    (bind ?i 1)
+    (bind ?aux ?num)
+    (loop-for-count (?i 1 (- ?num 1))
+      (bind ?sum (+ ?sum ?i))
+    )
+    (while (> ?sum 0)
+      (bind ?aux (+ ?aux 1))
+      (bind ?sum (- ?sum ?aux))
+    )
+    (return (= ?sum 0))
+  else
+    (printout t "Los valores introducidos no son validos." crlf)
+  )
+)
 
+(deffunction esMedioOpt (?num)
+  ;VERSIÓN OPTIMIZADA PARA NÚMEROS GRANDES, YA QUE CLIPS SE BLOQUEA FÁCILMENTE
+  ;Dado un número como parámetro, devuelve TRUE si este es medio, FALSE en caso contrario.
+  (if (isNumber ?num) then
+    (bind ?sum 0)
+    (bind ?i 1)
+    (bind ?aux ?num)
+    (loop-for-count (?i 1 (- ?num 1))
+      (bind ?sum (+ ?sum ?i))
+      (if (>= ?sum (+ 1 ?aux)) then
+        (bind ?aux (+ ?aux 1))
+        (bind ?sum (- ?sum ?aux))
+      )
+    )
+    (return (= ?sum 0))
+  else
+    (printout t "Los valores introducidos no son validos." crlf)
+  )
+)
+
+(deffunction lol ()
+  (bind ?i 2)
+  (loop-for-count (?i 1 100000)
+    (if (esMedioOpt ?i) then
+      (printout t ?i crlf)
+    )
+  )
 )
