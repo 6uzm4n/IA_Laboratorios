@@ -1,5 +1,34 @@
 ;LABORATORIO 2 INTELIGENCIA ARTIFICIAL
 
+;----------------------------------------
+
+(deffunction todosNumeros ($?mult)
+	;Devuelve TRUE si todos los campos son integer, si no FALSE
+	(bind ?cont 1)
+	(bind ?end 0)
+	(if (= (length$ ?mult) 0)
+		then
+			(bind ?end 1)
+	)
+	(while (and (= ?end 0) (< ?cont (+ (length$ ?mult) 1) ) )
+		(bind ?act (nth$ ?cont ?mult) )
+		(if (not (integerp ?act) )
+			then
+				(bind ?end 1)
+			else
+				(bind ?cont (+ ?cont 1) )
+		)
+	)
+	(if (= ?end 0)
+		then
+			(return TRUE)
+		else
+			(return FALSE)
+	)
+)
+
+
+
 (deffunction isNumber (?in)
 	(if (integerp ?in)
 		then
@@ -9,6 +38,9 @@
 			(return FALSE)
 	)
 )
+
+;------------------------------------------
+
 (deffunction cuentaAtras (?num)
   ;Devuelve una cuenta atrás desde el número que se pasa como parámetro.
 	(while (not(isNumber ?num))
@@ -79,40 +111,9 @@
 	)
 )
 
-
-;----------------------------------------
-
-(deffunction todosNumeros ($?mult)
-	;Devuelve TRUE si todos los campos son integer, si no FALSE
-	(bind ?cont 1)
-	(bind ?end 0)
-	(if (= (length$ ?mult) 0)
-		then
-			(bind ?end 1)
-	)
-	(while (and (= ?end 0) (< ?cont (+ (length$ ?mult) 1) ) )
-		(bind ?act (nth$ ?cont ?mult) )
-		(if (not (integerp ?act) )
-			then
-				(bind ?end 1)
-			else
-				(bind ?cont (+ ?cont 1) )
-		)
-	)
-	(if (= ?end 0)
-		then
-			(return TRUE)
-		else
-			(return FALSE)
-	)
-)
-
-;------------------------------------------
-
-
 (deffunction minimoMulti ($?serie)
   ;Devuelve el elemento más pequeño del multicampo pasado como parámetro.
-  (if	(not (todosNumeros ?serie))
+  (if	(not(todosNumeros ?serie))
 		then
 			(printout t "No todos los elementos son numeros!!" crlf)
 
@@ -126,7 +127,7 @@
 				)
 			(bind ?cont (+ ?cont 1))
 			)
-			(printout t "Min----->" ?min "<----" crlf)
+			(printout t "Min-----> " ?min " <----" crlf)
 	)
 )
 
@@ -148,7 +149,7 @@
 				)
 			(bind ?cont (+ ?cont 1))
 			)
-			(printout t "Max----->" ?max "<----" crlf)
+			(printout t "Max-----> " ?max " <----" crlf)
 	)
 )
 
@@ -172,10 +173,14 @@
 
 (deffunction mediaMulti ($?mult)
 	;Calcula la media de todos los elementos del multicampo pasado como parámetro.
+	
 	(if (todosNumeros ?mult)
+	
 		then
 			(bind ?sum (sumaMulti ?mult) )
-			(return (/ ?sum (length$ ?mult) ) )
+			(printout t "Media: " (/ ?sum (length$ ?mult) ) crlf) 
+		else
+			(printout t "Mete todo numeros e intenta otra vez" crlf )
 	)
 )
 
