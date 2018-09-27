@@ -1,52 +1,82 @@
 ;LABORATORIO 2 INTELIGENCIA ARTIFICIAL
 
-(deffunction cuentaAtras (?num)
-  ;Devuelve una cuenta atrás desde el número que se pasa como parámetro.
-	(if (integerp ?num)
+(deffunction isNumber (?in)
+	(if (integerp ?in)
 		then
-			(bind ?cont ?num)
-			(while (> ?cont 0)
-				(printout t ?cont )
-				(bind ?cont (- ?cont 1))
-			)
-			(printout t " " crlf)
+			(return TRUE)
 		else
 			(printout t "Mete un numero" crlf)
+			(return FALSE)
 	)
+)
+(deffunction cuentaAtras (?num)
+  ;Devuelve una cuenta atrás desde el número que se pasa como parámetro.
+	(while (not(isNumber ?num))
+		(bind ?num (read))
+	)
+	(bind ?cont ?num)
+	(printout t " " crlf)
+	(while (> ?cont 0)
+		(printout t ?cont)
+		(if (= (mod ?cont 10) 0)
+			then
+				(printout t " " crlf)
+			else
+				(printout t " ")
+		)
+		(bind ?cont (- ?cont 1))
+	)
+	(printout t " " crlf)
+	
 )
 
 (deffunction hasta (?num)
   ;Devuelve una secuencia de números hasta el que se pasa como parámetro.
-  (if (integerp ?num)
-		then
-			(bind ?cont 0)
-			(while (< ?cont ?num)
-				(printout t ?cont )
-				(bind ?cont (+ ?cont 1))
-			)
-			(printout t " " crlf)
-		else
-			(printout t "Mete un numero" crlf)
+	(while (not(isNumber ?num))		
+		(bind ?num (read))
 	)
+		(bind ?cont 0)
+		(printout t " " crlf)
+		(while (< ?cont ?num)
+			(printout t ?cont )
+			(if (= (mod ?cont 10) 0)
+			then
+				(printout t " " crlf)
+			else
+				(printout t " ")
+			)
+			(bind ?cont (+ ?cont 1))
+		)
+		(printout t " " crlf)
 )
 
 (deffunction sumatorioN (?num)
   ;Calcula el sumatorio de número que se pase como parámetro y todos sus anteriores.
+	
+	(while (not(isNumber ?num))		
+		(bind ?num (read))
+	)
 	(bind ?result 0)
 	(bind ?i 0)
-  (loop-for-count (?i 0 ?num)
-	 	(bind ?result (+ ?result ?i))
-  )
+	(loop-for-count (?i 0 ?num)
+		(bind ?result (+ ?result ?i))
+	)
 	(printout t ?result crlf)
 )
 
 (deffunction sumatorioR (?num)
   ;Calcula el sumatorio de número que se pase como parámetro y todos sus anteriores.
-  (if (= ?num 1) then
-    (return 1)
-  else
-    (return (+ (sumatorioR (- ?num 1)) ?num))
-  )
+  
+	(while (not(isNumber ?num))		
+		(bind ?num (read))
+	)
+		  
+	(if (= ?num 1) 
+		then
+			(return 1)
+		else
+			(return (+ (sumatorioR (- ?num 1)) ?num))
+	)
 )
 
 
@@ -210,16 +240,6 @@
 	)
 )
 
-(deffunction fibonacci (?num)
-  ;Dado un número como parámetro, devuelve los primeros n números de la serie de Fibonacci.
-	(bind $?result (create$))
-	(bind ?i 1)
-  (loop-for-count (?i 1 ?num)
-	 	(bind $?result $?result (fibonacciAux ?i))
-  )
-	(printout t ?result crlf)
-)
-
 (deffunction fibonacciAux (?num)
   ;Dado un número como parámetro, devuelve el número en esa posición de la serie de Fibonacci.
 	(if (<= ?num 0) then
@@ -232,3 +252,16 @@
 		)
 	)
 )
+
+
+(deffunction fibonacci (?num)
+  ;Dado un número como parámetro, devuelve los primeros n números de la serie de Fibonacci.
+	(bind $?result (create$))
+	(bind ?i 1)
+  (loop-for-count (?i 1 ?num)
+	 	(bind $?result $?result (fibonacciAux ?i))
+  )
+	(printout t ?result crlf)
+)
+
+
