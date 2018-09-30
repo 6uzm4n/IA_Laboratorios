@@ -34,7 +34,7 @@
 		then
 			(return TRUE)
 		else
-			(printout t "Mete un numero" crlf)
+			(printout t "Introduce un numero valido." crlf)
 			(return FALSE)
 	)
 )
@@ -59,12 +59,12 @@
 		(bind ?cont (- ?cont 1))
 	)
 	(printout t " " crlf)
-	
+
 )
 
 (deffunction hasta (?num)
   ;Devuelve una secuencia de números hasta el que se pasa como parámetro.
-	(while (not(isNumber ?num))		
+	(while (not(isNumber ?num))
 		(bind ?num (read))
 	)
 		(bind ?cont 0)
@@ -84,8 +84,8 @@
 
 (deffunction sumatorioN (?num)
   ;Calcula el sumatorio de número que se pase como parámetro y todos sus anteriores.
-	
-	(while (not(isNumber ?num))		
+
+	(while (not(isNumber ?num))
 		(bind ?num (read))
 	)
 	(bind ?result 0)
@@ -98,12 +98,12 @@
 
 (deffunction sumatorioR (?num)
   ;Calcula el sumatorio de número que se pase como parámetro y todos sus anteriores.
-  
-	(while (not(isNumber ?num))		
+
+	(while (not(isNumber ?num))
 		(bind ?num (read))
 	)
-		  
-	(if (= ?num 1) 
+
+	(if (= ?num 1)
 		then
 			(return 1)
 		else
@@ -115,7 +115,7 @@
   ;Devuelve el elemento más pequeño del multicampo pasado como parámetro.
   (if	(not(todosNumeros ?serie))
 		then
-			(printout t "No todos los elementos son numeros!!" crlf)
+			(printout t "No todos los elementos son numeros validos." crlf)
 
 		else
 			(bind ?cont 1)
@@ -127,7 +127,7 @@
 				)
 			(bind ?cont (+ ?cont 1))
 			)
-			(printout t "Min-----> " ?min " <----" crlf)
+			(printout t "Min -----> " ?min " <----" crlf)
 	)
 )
 
@@ -137,7 +137,7 @@
 ;Devuelve el elemento más grande del multicampo pasado como parámetro.
 	(if	(not (todosNumeros ?serie))
 		then
-			(printout t "No todos los elementos son numeros!!" crlf)
+			(printout t "No todos los elementos son numeros validos." crlf)
 
 		else
 			(bind ?cont 1)
@@ -149,7 +149,7 @@
 				)
 			(bind ?cont (+ ?cont 1))
 			)
-			(printout t "Max-----> " ?max " <----" crlf)
+			(printout t "Max -----> " ?max " <----" crlf)
 	)
 )
 
@@ -158,7 +158,7 @@
 
 	(if (not(todosNumeros ?mult))
 		then
-			(printout t "Mete todo numeros e intenta otra vez" crlf )
+			(printout t "No todos los elementos son numeros validos." crlf )
 		else
 			(bind ?sum 0)
 			(bind ?cont 1)
@@ -173,29 +173,30 @@
 
 (deffunction mediaMulti ($?mult)
 	;Calcula la media de todos los elementos del multicampo pasado como parámetro.
-	
+
 	(if (todosNumeros ?mult)
-	
+
 		then
 			(bind ?sum (sumaMulti ?mult) )
-			(printout t "Media: " (/ ?sum (length$ ?mult) ) crlf) 
+			(printout t "Media: " (/ ?sum (length$ ?mult) ) crlf)
 		else
-			(printout t "Mete todo numeros e intenta otra vez" crlf )
+			(printout t "No todos los elementos son numeros validos." crlf )
 	)
 )
 
 (deffunction switchin ( ?num $?serie)
-  (if	(not (todosNumeros ?serie))
+	;Si el primer parámetro es 1, calcula el máximo de todos los elementos del multicampo pasado como parámetro.
+	;Si el primer parámetro es 2, calcula el mínimo de todos los elementos del multicampo pasado como parámetro.
+	(if	(not (todosNumeros ?serie))
 		then
-			(printout t "No todos los elementos son numeros!!" crlf)
-		
+			(printout t "No todos los elementos son numeros validos." crlf)
 		else
 			(if (integerp ?num)
 				then
 					(if (= ?num 1)
 						then
 							(maximoMulti $?serie)
-						else 
+						else
 							(if (= ?num 2)
 								then
 									(minimoMulti $?serie)
@@ -208,15 +209,16 @@
 )
 
 (deffunction multiplicarElemento ( ?num $?serie)
+	;Dado un número y un elemento multicampo como parámetro, devuelve el multicampo tras multiplicar cada valor por el número dado.
   (if	(not (todosNumeros ?serie))
 		then
-			(printout t "No todos los elementos son numeros!!" crlf)
-		
+			(printout t "No todos los elementos son numeros validos" crlf)
+
 		else
 			(if (integerp ?num)
 				then
 					(bind ?cont 1)
-					(while (< ?cont (+ (length$ ?serie) 1) ) 
+					(while (< ?cont (+ (length$ ?serie) 1) )
 						(bind ?act (*(nth$ ?cont ?serie) ?num))
 						(bind ?serie (replace$ ?serie ?cont ?cont ?act ))
 						(bind ?cont (+ ?cont 1))
@@ -268,5 +270,3 @@
   )
 	(printout t ?result crlf)
 )
-
-
