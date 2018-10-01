@@ -14,6 +14,20 @@
 ;Camino recorrido (A=aspirar, I=moverse izquierda, D=moverse derecha)
 (defglobal ?*camino* = (create$ ""))
 
+(deffunction moverseI (?estado)
+  ;La aspiradora se mueve hacia la derecha.
+  (return (implode$ (replace$ (explode$ ?estado) 1 1 0)))
+)
+
+(deffunction moverseD (?estado)
+  ;La aspiradora se mueve hacia la izquierda.
+  (return (implode$ (replace$ (explode$ ?estado) 1 1 1)))
+)
+
+(deffunction getAspiradora (?estado)
+  ;Devuelve la posición de la aspiradora.
+  (return (nth$ 1 (explode$ ?estado)))
+)
 
 (deffunction aspirar (?estado)
   ;La aspiradora limpia la habitación en la que se encuentra.
@@ -27,17 +41,8 @@
   )
 )
 
-(deffunction moverseI (?estado)
-  ;La aspiradora se mueve hacia la derecha.
-  (return (implode$ (replace$ (explode$ ?estado) 1 1 0)))
-)
-
-(deffunction moverseD (?estado)
-  ;La aspiradora se mueve hacia la izquierda.
-  (return (implode$ (replace$ (explode$ ?estado) 1 1 1)))
-)
-
 (deffunction finalizado (?estado)
+  ;Checkea si el estado recibido como parámetro es un estado final.
   (if (member$ (implode$ ?estado) ?*estadoF*) then
     (return TRUE)
   else
@@ -46,6 +51,7 @@
 )
 
 (deffunction visitado (?estado)
+  ;Checkea si el estado recibido como parámetro ya ha sido visitado.
   (if (member$ ?estado ?*estadosV*) then
     (return TRUE)
   else
@@ -54,11 +60,12 @@
 )
 
 (deffunction append (?multicampo ?simple)
-  ;
+  ;Añade el parámetro simple al final del parámetro multicampo
   (return (insert$ ?multicampo (+ 1 (length$ ?multicampo)) ?simple))
 )
 
 (deffunction start ()
+  ;MÉTODO PRINCIPAL
   (bind ?arbol (create$ (implode$ ?*estadoI*)))
   (while (not (finalizado (explode$ (nth$ 1 ?arbol))))
     (printout t ?arbol crlf)
@@ -91,22 +98,4 @@
   )
 
   (printout t "Se ha llegado al estado final " (nth$ 1 ?arbol) " por el camino " (nth$ 1 ?*camino*) crlf)
-)
-
--------------------------------------------------------------------------------
-(deffunction getAspiradora (?estado)
-  ;Devuelve la posición de la aspiradora.
-  (return (nth$ 1 (explode$ ?estado)))
-)
-
-;Sin usar
-(deffunction getHabitacionI (?estado)
-  ;Devuelve el estado de la habitación izquierda.
-  (return (nth$ 2 ?estado))
-)
-
-;Sin usar
-(deffunction getHabitacionD (?estado)
-  ;Devuelve el estado de la habitación derecha.
-  (return (nth$ 3 ?estado))
 )
