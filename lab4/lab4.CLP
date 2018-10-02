@@ -6,7 +6,7 @@
 ; 3- estado de la habitación derecha (0: limpia/1: sucia)
 
 ;Estado inicial
-(defglobal ?*estadoI* = (create$ 1 1 1))
+(defglobal ?*estadoI* = "0 0 0")
 ;Estados finales
 (defglobal ?*estadoF* = (create$ "0 0 0" "1 0 0"))
 ;Estados visitados
@@ -64,9 +64,27 @@
   (return (insert$ ?multicampo (+ 1 (length$ ?multicampo)) ?simple))
 )
 
+(deffunction initialize ()
+  ;Reseteamos valores por defecto.
+  (bind ?*estadosV* (create$))
+  (bind ?*camino* (create$ ""))
+  ;Definimos el estado inicial.
+  (printout t "¿En que habitacion se encuentra la aspiradora? 0:Izquierda / 1:Derecha" crlf)
+  (bind ?aspiradora (read))
+  (printout t "¿En que estado se encuentra la habitacion izquierda? 0:Limpia / 1:Sucia" crlf)
+  (bind ?habitacionI (read))
+  (printout t "¿En que estado se encuentra la habitacion derecha? 0:Limpia / 1:Sucia" crlf)
+  (bind ?habitacionD (read))
+  (bind ?*estadoI* (implode$ (create$ ?aspiradora ?habitacionI ?habitacionD)))
+)
+
 (deffunction start ()
+
+  (initialize)
+
   ;MÉTODO PRINCIPAL
-  (bind ?arbol (create$ (implode$ ?*estadoI*)))
+
+  (bind ?arbol (create$ ?*estadoI*))
   (while (not (finalizado (explode$ (nth$ 1 ?arbol))))
     (printout t ?arbol crlf)
     (bind ?actual (nth$ 1 ?arbol))
@@ -97,5 +115,5 @@
     (bind ?*camino* (delete$ ?*camino* 1 1))
   )
 
-  (printout t "Se ha llegado al estado final " (nth$ 1 ?arbol) " por el camino " (nth$ 1 ?*camino*) crlf)
+  (printout t "Se ha llegado al estado final " (nth$ 1 ?arbol) " por el camino " (nth$ 1 ?*camino*) "." crlf)
 )
