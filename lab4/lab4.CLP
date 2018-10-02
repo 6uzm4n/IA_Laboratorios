@@ -1,9 +1,16 @@
 ;LABORATORIO 4 INTELIGENCIA ARTIFICIAL
 
+;Para iniciar el programa utilizar el comando: (start)
+
 ;El espacio de estados se definirá como un múlticampo con 3 campos, todos binarios:
 ; 1- posición de la aspiradora (0: izquierda/1: derecha)
 ; 2- estado de la habitación izquierda (0: limpia/1: sucia)
 ; 3- estado de la habitación derecha (0: limpia/1: sucia)
+
+;Las instrucciones para el camino que lleva a una solución se representan mediante:
+; A- Aspirar la habitación en la que se encuentra la aspiradora.
+; I- La aspiradora se mueve hacia la izquierda.
+; D- La aspiradora se mueve hacia la derecha.
 
 ;Estado inicial
 (defglobal ?*estadoI* = "0 0 0")
