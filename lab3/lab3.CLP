@@ -36,12 +36,12 @@
 
 (deffunction dentroDelRango (?a ?b)
 
-	(while (not(integerp ?a))
-		(printout t "Mete un núamero para el primer parámetro" crlf)
+	(while (not(isNumber ?a))
+		(printout t "Mete un numero para el primer parametro" crlf)
 			(bind ?a (read))
 	)
-	(while (not(integerp ?b))
-		(printout t "Mete un núamero para el segundo parámetro" crlf)
+	(while (not(isNumber ?b))
+		(printout t "Mete un numero para el segundo parametro" crlf)
 			(bind ?b (read))
 	)
 	(bind ?opc 1)
@@ -52,16 +52,54 @@
 	(bind ?num s)
 	(bind ?entre FALSE)
 	(while (not ?entre)
-		(printout t "Mete un número que esté entre los dos parámetros" crlf)
+		(printout t "Mete un numero que este entre los dos parametros" crlf)
 		(bind ?num (read))
 		(bind ?entre (entre ?opc ?a ?b ?num))
 	)
 	(printout t "Felicidades." crlf)
 )
 
-(deffunction acertijo (?num1 ?num2)
+(deffunction acertijo (?a ?b)
 	;Después de recibir dos números como parámetros, eligirá un número en ese rango y le pedirá números al usuario hasta que lo acierte.
-
+	
+	(while (not(isNumber ?a))
+		(printout t "Mete un numero para el primer parametro" crlf)
+			(bind ?a (read))
+	)
+	(while (not(isNumber ?b))
+		(printout t "Mete un numero para el segundo parametro" crlf)
+			(bind ?b (read))
+	)
+	(bind ?opc 1)
+	(if (< ?a ?b)
+		then
+			(bind ?opc 0)
+			(bind ?rand (random ?a ?b))
+		else
+			(bind ?rand (random ?b ?a))
+	)
+	(bind ?num s)
+	(bind ?entre FALSE)
+	(bind ?iguales FALSE)
+	
+	(while (not ?iguales)
+		(while (not ?entre)
+			(printout t "Trate de adivinar el numero premiado entre los dos parametros" crlf)
+			(bind ?num (read))
+			(if (isNumber ?num)
+				then 
+				(bind ?entre (entre ?opc ?a ?b ?num))
+			)
+		)
+		(if (= ?rand ?num)
+			then 
+				(bind ?iguales TRUE)
+			else
+				(bind ?entre FALSE)
+				(printout t "Siga Jugando..." crlf)
+		)
+	)
+	(printout t "Felicidades " crlf)
 )
 
 (deffunction mcd ( ?a ?b)
