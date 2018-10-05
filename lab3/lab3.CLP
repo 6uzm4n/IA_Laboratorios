@@ -200,7 +200,7 @@
 				(bind ?i (+ ?i 1))
 			)
 	)
-	(return ?res)
+	(printout t "La diferencia entre ambos multicampos: " ?res crlf)
 )
 
 ;---------------------
@@ -209,15 +209,29 @@
 
 (deffunction concatenacion (?mult1 ?mult2)
 	;Recibiendo dos parámetros multicampo, devuelve la concatenación de estos.
-
+	
+	(bind ?res (insert$ ?mult1 (+ (length$ ?mult1) 1) ?mult2))
+	(printout t "Resultado: " ?res crlf)
 )
+
+;---------------------
 
 ;8
 
 (deffunction sustituir (?par1 ?par2 $?mult)
 	;Recibiendo dos elementos simples y un elemento multicampo como parámetros,  sustituye las apariciones del primer elemento simple por el segundo.
-
+	(bind ?i 1)
+	(while (<= ?i (length$ ?mult))
+		(if (eq ?par1 (nth$ ?i ?mult))
+			then
+				(bind ?mult (replace$ ?mult ?i ?i ?par2))
+		)
+		(bind ?i (+ ?i 1))
+	)
+	(printout t "El resultado es: " ?mult crlf)
 )
+
+;---------------------
 
 ;9
 
@@ -226,12 +240,16 @@
 
 )
 
+;---------------------
+
 ;10
 
 (deffunction escalar (?mult1 ?mult2)
 	;Dados dos elementos multicampo como parámetro, devuelve el producto escalar de estos.
 
 )
+
+;---------------------
 
 ;11
 
@@ -240,7 +258,9 @@
 
 )
 
+;---------------------
 
+;12
 
 (deffunction primo (?num)
 	;Devuelve TRUE en caso de que el número introducido sea primo, FALSE en caso contrario.
@@ -274,8 +294,6 @@
   )
 )
 
-;12
-
 (deffunction num_primos_y_capicua (?num)
 	;Devuelve TRUE en caso de que el número introducido sea primo y capicúa, FALSE en caso contrario.
   (if (isNumber ?num) then
@@ -284,6 +302,8 @@
     (printout t "Los valores introducidos no son validos." crlf)
   )
 )
+
+;-------------------
 
 ;13
 
@@ -305,6 +325,8 @@
     (printout t "Los valores introducidos no son validos." crlf)
   )
 )
+
+;--------------------
 
 ;14
 
