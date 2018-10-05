@@ -9,6 +9,8 @@
 )
 -----------------------------------------------------------
 
+;1
+
 (deffunction entre (?opc ?a ?b ?num)
 	(switch ?opc
 		(case 0 then
@@ -59,6 +61,10 @@
 	(printout t "Felicidades." crlf)
 )
 
+;----------------------
+
+;2
+
 (deffunction acertijo (?a ?b)
 	;Después de recibir dos números como parámetros, eligirá un número en ese rango y le pedirá números al usuario hasta que lo acierte.
 	
@@ -102,6 +108,10 @@
 	(printout t "Felicidades " crlf)
 )
 
+;----------------
+
+;3
+
 (deffunction mcd ( ?a ?b)
   	(if (integerp ?a)
 		then
@@ -127,6 +137,10 @@
 	)
 )
 
+;-----------------
+
+;4
+
 (deffunction mcm (?a ?b)
 	(if (integerp ?a)
 		then
@@ -142,40 +156,91 @@
 	)
 )
 
+;------------------
+
+;5
+
 (deffunction mes (?num)
 	;Recibiendo un número como parámetro, devuelve cuántos días tiene el mes en esa posición.
 
 )
 
+;------------------
+
+;6
+
+(deffunction in (?num ?mult)
+	;Devuelve True si ?num esta en ?mult, en caso contrario false.
+	(bind ?i 1)
+	(bind ?end FALSE)
+	(while (and (<= ?i (length$ ?mult)) (not ?end))
+		(if (eq ?num (nth$ ?i ?mult))
+			then
+				(bind ?end TRUE)
+			else
+				(bind ?i (+ ?i 1))
+		)
+	)
+	(return ?end)
+)
+
+
 (deffunction diferencia (?mult1 ?mult2)
 	;Recibiendo dos parámetros multicampo, devuelve los valores del primero que no estén en el segundo.
-
+	(bind $?res (create$ ))
+	(if (not(eq ?mult1 ?mult2))
+		then 
+			(bind ?i 1)
+			(while (<= ?i (length$ ?mult1))	
+				(bind ?cur (nth$ ?i ?mult1))
+				(if (not(in ?cur ?mult2))
+					then
+						(bind ?res (insert$ ?res (+ (length$ mult2) 1) ?cur))
+				)
+				(bind ?i (+ ?i 1))
+			)
+	)
+	(return ?res)
 )
+
+;---------------------
+
+;7
 
 (deffunction concatenacion (?mult1 ?mult2)
 	;Recibiendo dos parámetros multicampo, devuelve la concatenación de estos.
 
 )
 
+;8
+
 (deffunction sustituir (?par1 ?par2 $?mult)
 	;Recibiendo dos elementos simples y un elemento multicampo como parámetros,  sustituye las apariciones del primer elemento simple por el segundo.
 
 )
+
+;9
 
 (deffunction cartesiano (?mult1 ?mult2)
 ;Dados dos elementos multicampo como parámetro, devuelve el producto cartesiano de estos.
 
 )
 
+;10
+
 (deffunction escalar (?mult1 ?mult2)
 	;Dados dos elementos multicampo como parámetro, devuelve el producto escalar de estos.
 
 )
 
+;11
+
 (deffunction unico (?mult)
 	;Dado un elemento multicampo como parámetro, devuelve TRUE si ningún elemento se repite, FALSE en caso contrario.
 
 )
+
+
 
 (deffunction primo (?num)
 	;Devuelve TRUE en caso de que el número introducido sea primo, FALSE en caso contrario.
@@ -209,6 +274,8 @@
   )
 )
 
+;12
+
 (deffunction num_primos_y_capicua (?num)
 	;Devuelve TRUE en caso de que el número introducido sea primo y capicúa, FALSE en caso contrario.
   (if (isNumber ?num) then
@@ -217,6 +284,8 @@
     (printout t "Los valores introducidos no son validos." crlf)
   )
 )
+
+;13
 
 (deffunction num_magico (?num)
 	;Dado un número como parámetro, sumará todas sus cifras hasta que el resultado final sea de una sola cifra.
@@ -237,6 +306,8 @@
   )
 )
 
+;14
+
 (deffunction esMedio (?num)
 	;Dado un número como parámetro, devuelve TRUE si este es medio, FALSE en caso contrario.
   (if (isNumber ?num) then
@@ -255,6 +326,8 @@
     (printout t "Los valores introducidos no son validos." crlf)
   )
 )
+
+
 
 (deffunction esMedioOpt (?num)
   ;VERSIÓN OPTIMIZADA PARA NÚMEROS GRANDES, YA QUE CLIPS SE BLOQUEA FÁCILMENTE
