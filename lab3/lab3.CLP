@@ -346,12 +346,3 @@
     (printout t "Los valores introducidos no son validos." crlf)
   )
 )
-
-(deffunction lol ()
-  (bind ?i 2)
-  (loop-for-count (?i 1 100000)
-    (if (esMedioOpt ?i) then
-      (printout t ?i crlf)
-    )
-  )
-)
