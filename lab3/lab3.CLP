@@ -67,7 +67,7 @@
 
 (deffunction acertijo (?a ?b)
 	;Después de recibir dos números como parámetros, eligirá un número en ese rango y le pedirá números al usuario hasta que lo acierte.
-	
+
 	(while (not(isNumber ?a))
 		(printout t "Mete un numero para el primer parametro" crlf)
 			(bind ?a (read))
@@ -87,18 +87,18 @@
 	(bind ?num s)
 	(bind ?entre FALSE)
 	(bind ?iguales FALSE)
-	
+
 	(while (not ?iguales)
 		(while (not ?entre)
 			(printout t "Trate de adivinar el numero premiado entre los dos parametros" crlf)
 			(bind ?num (read))
 			(if (isNumber ?num)
-				then 
+				then
 				(bind ?entre (entre ?opc ?a ?b ?num))
 			)
 		)
 		(if (= ?rand ?num)
-			then 
+			then
 				(bind ?iguales TRUE)
 			else
 				(bind ?entre FALSE)
@@ -162,7 +162,19 @@
 
 (deffunction mes (?num)
 	;Recibiendo un número como parámetro, devuelve cuántos días tiene el mes en esa posición.
-
+  (if (and (integerp ?num) (<= ?num 12) (>= ?num 1)) then
+    (if (= ?num 2) then
+      (return 28)
+    else
+      (if (or (= ?num 4) (= ?num 6) (= ?num 9) (= ?num 11)) then
+        (return 30)
+      else
+        (return 31)
+      )
+    )
+  else
+    (printout t "El valor introducido no es un mes valido." crlf)
+  )
 )
 
 ;------------------
@@ -189,9 +201,9 @@
 	;Recibiendo dos parámetros multicampo, devuelve los valores del primero que no estén en el segundo.
 	(bind $?res (create$ ))
 	(if (not(eq ?mult1 ?mult2))
-		then 
+		then
 			(bind ?i 1)
-			(while (<= ?i (length$ ?mult1))	
+			(while (<= ?i (length$ ?mult1))
 				(bind ?cur (nth$ ?i ?mult1))
 				(if (not(in ?cur ?mult2))
 					then
@@ -209,7 +221,7 @@
 
 (deffunction concatenacion (?mult1 ?mult2)
 	;Recibiendo dos parámetros multicampo, devuelve la concatenación de estos.
-	
+
 	(bind ?res (insert$ ?mult1 (+ (length$ ?mult1) 1) ?mult2))
 	(printout t "Resultado: " ?res crlf)
 )
