@@ -267,7 +267,13 @@
 
 (deffunction unico (?mult)
 	;Dado un elemento multicampo como parámetro, devuelve TRUE si ningún elemento se repite, FALSE en caso contrario.
-
+  (bind ?norep TRUE)
+  (while (and (not (eq (first$ ?mult) (create$))) ?norep)
+    (bind ?first (first$ ?mult))
+    (bind ?mult (delete$ ?mult 1 1))
+    (bind ?norep (not (member$ ?first ?mult)))
+  )
+  (return ?norep)
 )
 
 ;---------------------
