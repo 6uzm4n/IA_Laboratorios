@@ -51,6 +51,7 @@
 )
 
 (deffunction dentroDelRango (?a ?b)
+ 	;Después de recibir dos números como parámetros, pedirá números al usuario hasta que uno de ellos esté en el rango entre los dos parámetros.
 	(while (not(isNumber ?a))
 		(printout t "Mete un numero para el primer parametro" crlf)
 			(bind ?a (read))
@@ -120,32 +121,34 @@
 
 ;3
 (deffunction mcd ( ?a ?b)
-  	(if (integerp ?a)
-		then
-			(if (integerp ?b)
-				then
-					(if (= ?a ?b)
-						then
-							(printout t "mcd =" ?a crlf)
-							(return ?a)
-						else
-							(if (< ?a ?b )
-								then
-									(mcd ?a(- ?b ?a))
-								else
-									(mcd (- ?a ?b) ?b)
-							)
-					)
-				else
-					(printout t "El elemento Nº2 no es válido" crlf)
-			)
-		else
-			(printout t "El elemento Nº1 no es válido" crlf)
+   ;Calcula el máximo común divisor de los dos parámetros recibidos.
+	(if (integerp ?a)
+	then
+		(if (integerp ?b)
+			then
+				(if (= ?a ?b)
+					then
+						(printout t "mcd =" ?a crlf)
+						(return ?a)
+					else
+						(if (< ?a ?b )
+							then
+								(mcd ?a(- ?b ?a))
+							else
+								(mcd (- ?a ?b) ?b)
+						)
+				)
+			else
+				(printout t "El elemento Nº2 no es válido" crlf)
+		)
+	else
+		(printout t "El elemento Nº1 no es válido" crlf)
 	)
 )
 
 ;4
 (deffunction mcm (?a ?b)
+ 	;Calcula el mínimo común múltiplo de los dos números recibidos.
 	(if (integerp ?a)
 		then
 			(if (integerp ?b)
@@ -217,9 +220,7 @@
 ;7
 (deffunction concatenacion (?mult1 ?mult2)
 	;Recibiendo dos parámetros multicampo, devuelve la concatenación de estos.
-
 	(bind ?res (insert$ ?mult1 (+ (length$ ?mult1) 1) ?mult2))
-	(printout t "Resultado: " ?res crlf)
 	(return ?res)
 )
 
@@ -239,20 +240,23 @@
 
 ;9
 (deffunction cartesiano (?mult1 ?mult2)
-
-;Dados dos elementos multicampo como parámetro, devuelve el producto cartesiano de estos.
+  ;Dados dos elementos multicampo como parámetro, devuelve el producto cartesiano de estos.
 	(bind ?cont1 1)
 	(bind ?cont2 1)
-	(bind $?res (create$ ) )
+	(bind $?res (create$))
 	(while (<= ?cont1 (length$ ?mult1))
 		(bind ?cont2 1)
 		(while (<= ?cont2 (length$ ?mult2))
-			(bind $?res (concatenacion $?res (create$ (nth$ ?cont1 ?mult1 ) (nth$ ?cont2 ?mult2) )))
+      ;En caso de querer hacer el producto cartesiano entre multicampos cuyos valores son sólo números,
+      ;utilizar la linea de código "2" (ya que permite realizar multiplicaciones). En caso de querer
+      ;tener en cuenta valores no númericos, utilizar la linea "1".
+			(bind $?res (concatenacion $?res (create$ (nth$ ?cont1 ?mult1 ) (nth$ ?cont2 ?mult2))))       ;1
+      ;(bind $?res (concatenacion $?res (create$ (* (nth$ ?cont1 ?mult1 ) (nth$ ?cont2 ?mult2)))))  ;2
 			(bind ?cont2 (+ ?cont2 1))
 		)
 		(bind ?cont1 (+ ?cont1 1))
 	)
-	(printout t "Resultado: " ?res crlf)
+	(printout t "Resultado: " $?res crlf)
 )
 
 ;10
@@ -269,7 +273,7 @@
 		(return ?res)
 	)
 	else
-		(printout t "Los multicampos no son de la misma longitud o estan vacios" crlf)
+		(printout t "Los multicampos no son de la misma longitud o estan vacios." crlf)
 )
 
 ;11
@@ -367,7 +371,7 @@
 )
 
 (deffunction esMedioOpt (?num)
-  ;VERSIÓN OPTIMIZADA PARA NÚMEROS GRANDES, YA QUE CLIPS SE BLOQUEA FÁCILMENTE
+  ;VERSIÓN OPTIMIZADA PARA NÚMEROS GRANDES, YA QUE CLIPS SE BLOQUEA FÁCILMENTE.
   ;Dado un número como parámetro, devuelve TRUE si este es medio, FALSE en caso contrario.
   (if (isNumber ?num) then
     (bind ?sum 0)
