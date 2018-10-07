@@ -7,6 +7,21 @@
   ;Devuelve TRUE en caso de que el parámetro sea un número.
   (return (or (integerp ?var) (floatp ?var)))
 )
+
+(deffunction multiNumbers(?multi)
+  ;Devuelve True en caso de que TODOS los elementosdel multicampo sean números.
+  (bind ?res TRUE)
+  (bind ?cont 1)
+  (while (and(<= ?cont (length$ ?multi)) ?res)
+	(bind ?res (isNumber (nth$ ?cont ?multi)))
+	(bind ?cont (+ ?cont 1))
+  )
+  (if (= 0 (length$ ?multi))
+	then
+		(bind ?res FALSE)
+  )
+  (return ?res)
+)
 -----------------------------------------------------------
 
 ;1
@@ -205,6 +220,7 @@
 
 	(bind ?res (insert$ ?mult1 (+ (length$ ?mult1) 1) ?mult2))
 	(printout t "Resultado: " ?res crlf)
+	(return ?res)
 )
 
 ;8
@@ -223,14 +239,37 @@
 
 ;9
 (deffunction cartesiano (?mult1 ?mult2)
-;Dados dos elementos multicampo como parámetro, devuelve el producto cartesiano de estos.
 
+;Dados dos elementos multicampo como parámetro, devuelve el producto cartesiano de estos.
+	(bind ?cont1 1)
+	(bind ?cont2 1)
+	(bind $?res (create$ ) )
+	(while (<= ?cont1 (length$ ?mult1))
+		(bind ?cont2 1)
+		(while (<= ?cont2 (length$ ?mult2))
+			(bind $?res (concatenacion $?res (create$ (nth$ ?cont1 ?mult1 ) (nth$ ?cont2 ?mult2) )))
+			(bind ?cont2 (+ ?cont2 1))
+		)
+		(bind ?cont1 (+ ?cont1 1))
+	)
+	(printout t "Resultado: " ?res crlf)
 )
 
 ;10
 (deffunction escalar (?mult1 ?mult2)
-	;Dados dos elementos multicampo como parámetro, devuelve el producto escalar de estos.
-
+	;devuelve el producto escalar de dos multicampos si son de la misma longitud
+	(bind ?res 0)
+	(bind ?cont 1)
+	(if (and (multiNumbers ?mult1) (multiNumbers ?mult2) (= (length$ ?mult1)(length$ ?mult2)))
+	then
+		(while (<= ?cont (length$ ?mult1))
+			(bind ?res (+ ?res (* (nth$ ?cont ?mult1) (nth$ ?cont ?mult2) )))
+			(bind ?cont (+ ?cont 1))
+		)
+		(return ?res)
+	)
+	else
+		(printout t "Los multicampos no son de la misma longitud o estan vacios" crlf)
 )
 
 ;11
