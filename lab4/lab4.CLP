@@ -50,7 +50,7 @@
 
 (deffunction finalizado (?estado)
   ;Checkea si el estado recibido como parámetro es un estado final.
-  (if (member$ (implode$ ?estado) ?*estadoF*) then
+  (if (member$ ?estado ?*estadoF*) then
     (return TRUE)
   else
     (return FALSE)
@@ -71,17 +71,31 @@
   (return (insert$ ?multicampo (+ 1 (length$ ?multicampo)) ?simple))
 )
 
+(deffunction readBit ()
+  ;Pide un valor de 0 o 1 hasta que lo recibe y lo devuelve.
+  (bind ?fin FALSE)
+  (while (not ?fin)
+    (bind ?bit (read))
+    (bind ?fin (or (eq 0 ?bit) (eq 1 ?bit)))
+    (if (not ?fin) then
+      (printout t "Introduce un valor correcto" crlf)
+    )
+  )
+  (return ?bit)
+)
+
+
 (deffunction initialize ()
   ;Reseteamos valores por defecto.
   (bind ?*estadosV* (create$))
   (bind ?*camino* (create$ ""))
   ;Definimos el estado inicial.
   (printout t "¿En que habitacion se encuentra la aspiradora? 0:Izquierda / 1:Derecha" crlf)
-  (bind ?aspiradora (read))
+  (bind ?aspiradora (readBit))
   (printout t "¿En que estado se encuentra la habitacion izquierda? 0:Limpia / 1:Sucia" crlf)
-  (bind ?habitacionI (read))
+  (bind ?habitacionI (readBit))
   (printout t "¿En que estado se encuentra la habitacion derecha? 0:Limpia / 1:Sucia" crlf)
-  (bind ?habitacionD (read))
+  (bind ?habitacionD (readBit))
   (bind ?*estadoI* (implode$ (create$ ?aspiradora ?habitacionI ?habitacionD)))
 )
 
@@ -90,9 +104,24 @@
   (initialize)
 
   ;MÉTODO PRINCIPAL
+  ;Funcionamiento:
+  ;Se crean dos multicampos que corresponden al arbol de estados y a un arbol paralelo que
+  ;representa el camino que se ha recorrido para llegar a cada estado. Por ejemplo:
+  ; Arbol:    (1 0 1) (1 1 1)
+  ; Estados:  (AD)    (ID)
+  ;Según lo anterior, para llegar al estado (1 0 1) hemos recorrido el camino Aspirar-derecha.
+  ;Del mismo modo, para llegar al estado (1 1 1) hemos recorrido el camino Izquierda-derecha
+  ;
+  ;Siempre que se actue sobre un estado o se elimine, se actuará sobre su paralelo. Así mismo,
+  ;cuando se añadan estados nuevos en base a un estado, se usara su camino para crear el camino
+  ;que lleva al nuevo estado. Por ejemplo:
+  ; (0 0 1)(IA) + D = (1 0 1)(IAD)
+  ;
+  ;El algoritmo utilizado es Breadth-First-Search (busqueda en anchura)
 
   (bind ?arbol (create$ ?*estadoI*))
-  (while (not (finalizado (explode$ (nth$ 1 ?arbol))))
+  (bind ?*estadosV* (append ?*estadosV* ?*estadoI*))
+  (while (not (finalizado (nth$ 1 ?arbol)))
     (printout t ?arbol crlf)
     (bind ?actual (nth$ 1 ?arbol))
     ;Probamos a aspirar.
@@ -117,10 +146,10 @@
       (bind ?*estadosV* (append ?*estadosV* ?aux))
       (bind ?*camino* (append ?*camino* (str-cat (nth$ 1 ?*camino*) D)))
     )
-    ;Eliminamos primera posición del arbol.
+    ;Eliminamos primera posición del arbol de estados y del de caminos.
     (bind ?arbol (delete$ ?arbol 1 1))
     (bind ?*camino* (delete$ ?*camino* 1 1))
   )
 
-  (printout t "Se ha llegado al estado final " (nth$ 1 ?arbol) " por el camino " (nth$ 1 ?*camino*) "." crlf)
+  (printout t "Se ha llegado desde el estado inicial (" ?*estadoI* ") al estado final (" (nth$ 1 ?arbol) ") por el camino " (nth$ 1 ?*camino*) "." crlf)
 )
