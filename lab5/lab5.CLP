@@ -1,4 +1,18 @@
-;LABORATORIO 4 INTELIGENCIA ARTIFICIAL
+;LABORATORIO 5 INTELIGENCIA ARTIFICIAL
+
+;Para iniciar el programa utilizar el comando: (start)
+
+;El espacio de estados se definirá como un múlticampo con 4 campos, todos binarios:
+; 1- posición del granjero (FALSE: izquierda/TRUE: derecha)
+; 2- posición de la lechuga (FALSE: izquierda/TRUE: derecha)
+; 3- posición de la cabra (FALSE: izquierda/TRUE: derecha)
+; 4- posición del puma (FALSE: izquierda/TRUE: derecha)
+
+;Las instrucciones para el camino que lleva a una solución se representan mediante:
+; G- El granjero se cambia de lado a sí mismo.
+; L- El granjero cambia de lado a la lechuga y a sí mismo.
+; C- El granjero cambia de lado a la cabra y a sí mismo.
+; P- El granjero cambia de lado al puma y a sí mismo.
 
 ;Estado inicial
 (defglobal ?*estadoI* = "FALSE FALSE FALSE FALSE")
