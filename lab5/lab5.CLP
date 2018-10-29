@@ -25,6 +25,25 @@
 ;Estados prohibidos
 (defglobal ?*estadosP* = (create$ "TRUE FALSE FALSE TRUE" "FALSE TRUE TRUE FALSE" "TRUE TRUE FALSE FALSE" "FALSE FALSE TRUE TRUE" "TRUE FALSE FALSE FALSE" "FALSE TRUE TRUE TRUE"))
 
+(deffunction getGranjero (?estado)
+  ;Devuelve la posición del granjero.
+  (return (nth$ 1 (explode$ ?estado)))
+)
+
+(deffunction getLechuga (?estado)
+  ;Devuelve la posición de la lechuga.
+  (return (nth$ 2 (explode$ ?estado)))
+)
+
+(deffunction getCabra (?estado)
+  ;Devuelve la posición de la cabra.
+  (return (nth$ 3 (explode$ ?estado)))
+)
+
+(deffunction getPuma (?estado)
+  ;Devuelve la posición del puma.
+  (return (nth$ 4 (explode$ ?estado)))
+)
 
 (deffunction moverG (?estado)
   ;El granjero cambia de posición.
@@ -84,26 +103,6 @@
   else
     (return FALSE)
   )
-)
-
-(deffunction getGranjero (?estado)
-  ;Devuelve la posición del granjero.
-  (return (nth$ 1 (explode$ ?estado)))
-)
-
-(deffunction getLechuga (?estado)
-  ;Devuelve la posición de la lechuga.
-  (return (nth$ 2 (explode$ ?estado)))
-)
-
-(deffunction getCabra (?estado)
-  ;Devuelve la posición de la cabra.
-  (return (nth$ 3 (explode$ ?estado)))
-)
-
-(deffunction getPuma (?estado)
-  ;Devuelve la posición del puma.
-  (return (nth$ 4 (explode$ ?estado)))
 )
 
 (deffunction finalizado (?estado)
