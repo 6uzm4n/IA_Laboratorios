@@ -24,5 +24,4 @@
 	(printout t ?x crlf)
   (assert (numero (- ?x 1)))
   (retract ?f)
-
 )
