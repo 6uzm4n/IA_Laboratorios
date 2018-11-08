@@ -17,20 +17,11 @@
   (halt)
 )
 
-(defrule R3 "Elimina el hecho menor."
+(defrule R3 "Elimina el hecho mayor."
 	(declare (salience 10))
   ?f <- (numero ?x)
   ?g <- (numero ?y)
   (test (> ?x ?y))
 =>
   (retract ?g)
-)
-
-(defrule R4 "Elimina el hecho menor."
-	(declare (salience 10))
-  ?f <- (numero ?x)
-  ?g <- (numero ?y)
-  (test (< ?x ?y))
-=>
-  (retract ?f)
 )
