@@ -2,6 +2,12 @@
 
 ;Tras pedir un número por pantalla, realiza el sumatorio desde 0 a ese número.
 
+(defrule R0 "Error para cuando no se ha definido ningun hecho."
+  (declare (salience 1))
+=>
+  (printout t "ERROR: No se ha inicializado ningun hecho (numero x)." crlf)
+)
+
 (defrule R1 "Crea un hecho sumatorio."
 	(declare (salience 5))
 =>

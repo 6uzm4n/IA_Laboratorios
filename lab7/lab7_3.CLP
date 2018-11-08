@@ -2,7 +2,13 @@
 
 ;Dado un hecho con varios números, calcula el mayor de estos.
 
-(defrule mayor
+(defrule R0 "Error para cuando no se ha definido ningun hecho."
+  (declare (salience 1))
+=>
+  (printout t "ERROR: No se ha inicializado ningun hecho (numeros $x)." crlf)
+)
+
+(defrule R1
 	(declare (salience 5))
 	(numeros $?multi)
  =>
