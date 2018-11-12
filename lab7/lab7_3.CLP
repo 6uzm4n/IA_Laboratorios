@@ -27,5 +27,6 @@
 	(numeros $?multi)
  =>
 	(printout t "El máximo es: " (maximoMulti $?multi) crlf)
+	(halt)
 )
 
