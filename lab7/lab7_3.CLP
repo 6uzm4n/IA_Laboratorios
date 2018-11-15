@@ -2,19 +2,6 @@
 
 ;Dado un hecho con varios números, calcula el mayor de estos.
 
-(defrule R0 "Error para cuando no se ha definido ningun hecho."
-  (declare (salience 1))
-=>
-  (printout t "ERROR: No se ha inicializado ningun hecho (numeros $x)." crlf)
-)
-
-(defrule R1
-	(declare (salience 5))
-	(numeros $?multi)
- =>
-	(printout t "El máximo es: " (maximoMulti $?multi) crlf)
-)
-
 (deffunction maximoMulti ($?serie)
 ;Devuelve el elemento más grande del multicampo pasado como parámetro.
 	(bind ?cont 1)
@@ -28,3 +15,18 @@
 	)
 	(return ?max)
 )
+
+(defrule R0 "Error para cuando no se ha definido ningun hecho."
+  (declare (salience 1))
+=>
+  (printout t "ERROR: No se ha inicializado ningun hecho (numeros $x)." crlf)
+)
+
+(defrule R1
+	(declare (salience 5))
+	(numeros $?multi)
+ =>
+	(printout t "El máximo es: " (maximoMulti $?multi) crlf)
+	(halt)
+)
+
