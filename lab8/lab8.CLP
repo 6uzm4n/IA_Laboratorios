@@ -6,7 +6,7 @@
 )
 
 (deffacts estado-inicial "Estado inicial de las jarras."
-  (jarras (jarra1 0) (jarra2 0) (previo 0) (accion "Inicializar."))
+  (jarras (jarra1 0) (jarra2 0) (previo 0) (accion "Inicializar: Jarra de la izquierda:4L Jarra de la derecha:3L" ))
 )
 
 (defrule llenar4 "Llena la jarra de 4 litros"
