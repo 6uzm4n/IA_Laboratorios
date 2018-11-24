@@ -96,7 +96,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (bind ?*CHECKERS* ?c)
 
   (while (and (not (= ?*BLACK* ?f)) (not (= ?*WHITE* ?f))) do
-    (printout t "Elige tu color de fichas (Blanco:" ?*BLACK* " Negro:" ?*WHITE* "):" crlf)
+    (printout t "Elige tu color de fichas (Blanco:" ?*WHITE* " Negro:" ?*BLACK* "):" crlf)
     (bind ?f (read))
   )
   (switch ?f
@@ -121,15 +121,24 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (bind ?kills (create$))
   (loop-for-count (?y 1 ?*SIZE*) do
 		(loop-for-count (?x 1 ?*SIZE*) do
-    (if (= 1 (* (get_piece ?y ?x) ?player)) then
-      ;Calcula movimiento de fichas normales.
-      (printout t "No debería printear esto." crlf)
+      (if (= 1 (* (get_piece ?y ?x) ?player)) then
+        ;Calcula movimiento de fichas normales.
+        (if (and (<= 1 (+ ?y (* 2 ?player))) (>= ?*SIZE* (+ ?y (* 2 ?player)))) then
+          ;Si no se sale verticalmente.
+          (if (or (and (<= 1 (- ?x 2))       (> 0 (* ?player (get_piece (+ ?y ?player) (- ?x 1)))) (= 0 (get_piece (+ ?y (* 2 ?player)) (- ?x 2))))
+                  (and (>= ?*SIZE* (+ ?x 2)) (> 0 (* ?player (get_piece (+ ?y ?player) (+ ?x 1)))) (= 0 (get_piece (+ ?y (* 2 ?player)) (+ ?x 2)))))
+          then
+            ;Si puede comer a izquierda o derecha
+            (printout t (* ?player (get_piece (+ ?y ?player) (- ?x 1))) (implode$ (create$ ?y ?x)) crlf)
+            (bind ?kills (append ?kills (implode$ (create$ ?y ?x))))
+          )
+        )
+        (if (= 2 (* (get_piece ?y ?x) ?player)) then
+          ;Calcula movimiento de damas.
+          (printout t "No debería printear esto." crlf)
+        )
+  		)
     )
-    (if (= 2 (* (get_piece ?y ?x) ?player)) then
-      ;Calcula movimiento de damas.
-      (printout t "No debería printear esto." crlf)
-    )
-		)
 	)
   (return ?kills)
 )
@@ -144,8 +153,9 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
         ;Calcula movimiento de fichas normales.
         (if (and (<= 1 (+ ?y ?player)) (>= ?*SIZE* (+ ?y ?player))) then
           ;Si no se sale verticalmente.
-          (if (or (and (<= 1 (- ?x 1)) (= 0 (get_piece (+ ?y ?player) (- ?x 1))))
-                  (and (>= ?*SIZE* (+ ?x 1)) (= 0 (get_piece (+ ?y ?player) (+ ?x 1))))) then
+          (if (or (and (<= 1 (- ?x 1))         (= 0 (get_piece (+ ?y ?player) (- ?x 1))))
+                  (and (>= ?*SIZE* (+ ?x 1))   (= 0 (get_piece (+ ?y ?player) (+ ?x 1)))))
+          then
             ;Si puede comer a izquierda o derecha
             (bind ?moves (append ?moves (implode$ (create$ ?y ?x))))
           )
@@ -153,7 +163,13 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
       )
       (if (= 2 (* (get_piece ?y ?x) ?player)) then
         ;Calcula movimiento de damas.
-        (printout t "No debería printear esto." crlf)
+        (if (or (and (>= ?*SIZE* (+ ?y 1))  (<= 1 (- ?x 1))       (= 0 (get_piece (+ ?y 1) (- ?x 1)))) ;Abajo-izquierda
+                (and (>= ?*SIZE* (+ ?y 1))  (>= ?*SIZE* (+ ?x 1)) (= 0 (get_piece (+ ?y 1) (+ ?x 1)))) ;Abajo-derecha
+                (and (<= 1 (- ?y 1))        (<= 1 (- ?x 1))       (= 0 (get_piece (- ?y 1) (- ?x 1)))) ;Arriba-izquierda
+                (and (<= 1 (- ?y 1))        (>= ?*SIZE* (+ ?x 1)) (= 0 (get_piece (- ?y 1) (- ?x 1))))) ;Arriba-derecha
+        then
+          (bind ?moves (append ?moves (implode$ (create$ ?y ?x))))
+        )
       )
 		)
 	)
