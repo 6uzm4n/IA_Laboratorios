@@ -136,11 +136,85 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
             (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y (* 2 ?player)) (+ ?x 2)))))
           )
         )
-        (if (= 2 (* (get_piece ?y ?x) ?player)) then
-          ;Calcula movimiento de damas.
-          (printout t "No debería printear esto." crlf)
+      )
+      (if (= 2 (* (get_piece ?y ?x) ?player)) then
+        ;Calcula movimiento de damas.
+        (bind ?bl 0) ;Flag para cuando no puede seguir buscando por abajo-izquierda
+        (bind ?br 0) ;Flag para cuando no puede seguir buscando por abajo-derecha
+        (bind ?tl 0) ;Flag para cuando no puede seguir buscando por arriba-izquierda
+        (bind ?tr 0) ;Flag para cuando no puede seguir buscando por arriba-derecha
+        (loop-for-count (?i 1 (max ?x ?y (- ?*SIZE* ?x) (- ?*SIZE* ?y))) do
+          (if (and (>= ?*SIZE* (+ ?y ?i))  (<= 1 (- ?x ?i)) (> 2 ?bl)) then
+            ;Abajo-izquierda
+            (if (and (= 0 (get_piece (+ ?y ?i) (- ?x ?i))) (= 1 ?bl)) then
+              ;Si encuentra un espacio libre y está comiendo, guarda el posible estado.
+              (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y ?i) (- ?x ?i)))))
+            else
+              (if (or (and (> 0 (* ?player (get_piece (+ ?y ?i) (- ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece (+ ?y ?i) (- ?x ?i))))) then
+                ;Si encuentra una ficha alida el flag se pone a 2 y no puede seguir comiendo.
+                ;Si encuentra una ficha enemiga y el flag ya está a uno, se pone a 2 y no puede seguir comiendo.
+                (bind ?bl 2)
+              else
+                (if (and (> 0 (* ?player (get_piece (+ ?y ?i) (- ?x ?i)))) (= 0 ?bl)) then
+                  (bind ?bl 1)
+                )
+              )
+            )
+          )
+          (if (and (>= ?*SIZE* (+ ?y ?i))  (>= ?*SIZE* (+ ?x ?i)) (> 2 ?br)) then
+            ;Abajo-derecha
+            (if (and (= 0 (get_piece (+ ?y ?i) (+ ?x ?i))) (= 1 ?br)) then
+              ;Si encuentra un espacio libre y está comiendo, guarda el posible estado.
+              (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y ?i) (+ ?x ?i)))))
+            else
+              (if (or (and (> 0 (* ?player (get_piece (+ ?y ?i) (+ ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece (+ ?y ?i) (+ ?x ?i))))) then
+                ;Si encuentra una ficha alida el flag se pone a 2 y no puede seguir comiendo.
+                ;Si encuentra una ficha enemiga y el flag ya está a uno, se pone a 2 y no puede seguir comiendo.
+                (bind ?br 2)
+              else
+                (if (and (> 0 (* ?player (get_piece (+ ?y ?i) (+ ?x ?i)))) (= 0 ?br)) then
+                  (bind ?br 1)
+                )
+              )
+            )
+          )
+          (if (and (<= 1 (- ?y ?i))        (<= 1 (- ?x ?i)) (> 2 ?tl)) then
+            ;Arriba-izquierda
+            (if (and (= 0 (get_piece (- ?y ?i) (- ?x ?i))) (= 1 ?tl)) then
+              ;Si encuentra un espacio libre y está comiendo, guarda el posible estado.
+              (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y ?i) (- ?x ?i)))))
+            else
+              (if (or (and (> 0 (* ?player (get_piece (- ?y ?i) (- ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece (- ?y ?i) (- ?x ?i))))) then
+                ;Si encuentra una ficha alida el flag se pone a 2 y no puede seguir comiendo.
+                ;Si encuentra una ficha enemiga y el flag ya está a uno, se pone a 2 y no puede seguir comiendo.
+                (bind ?tl 2)
+              else
+                (if (and (> 0 (* ?player (get_piece (- ?y ?i) (- ?x ?i)))) (= 0 ?tl)) then
+                  ;Si encuentra una ficha enemiga y el flag está a 0, lo pone a 1 y puede comer.
+                  (bind ?tl 1)
+                )
+              )
+            )
+          )
+          (if (and (<= 1 (- ?y ?i))        (>= ?*SIZE* (+ ?x ?i)) (> 2 ?tr)) then
+            ;Arriba-derecha
+            (if (and (= 0 (get_piece (- ?y ?i) (+ ?x ?i))) (= 1 ?tr)) then
+              ;Si encuentra un espacio libre y está comiendo, guarda el posible estado.
+              (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y ?i) (- ?x ?i)))))
+            else
+              (if (or (and (> 0 (* ?player (get_piece (- ?y ?i) (+ ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece (- ?y ?i) (+ ?x ?i))))) then
+                ;Si encuentra una ficha alida el flag se pone a 2 y no puede seguir comiendo.
+                ;Si encuentra una ficha enemiga y el flag ya está a uno, se pone a 2 y no puede seguir comiendo.
+                (bind ?tr 2)
+              else
+                (if (and (> 0 (* ?player (get_piece (- ?y ?i) (+ ?x ?i)))) (= 0 ?tr)) then
+                  (bind ?tr 1)
+                )
+              )
+            )
+          )
         )
-  		)
+      )
     )
 	)
   (return ?kills)
