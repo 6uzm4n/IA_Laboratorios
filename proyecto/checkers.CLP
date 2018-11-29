@@ -62,7 +62,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 						(case 0 then (printout t " "))
 						(case 1 then (printout t "o"))
 						(case -1 then (printout t "x"))
-            (case 2 then (printout t "O"))
+            (case 2 then (printout t "@"))
             (case -2 then (printout t "X"))
 						)
 					(bind ?i (+ ?i 1))
@@ -113,8 +113,8 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
       (focus PLAYER)
     )
   )
+  (assert (turn 1))
   (initialize)
-  (print_board)
 )
 
 (deffunction MAIN::check_kills (?player)
@@ -200,7 +200,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
             ;Arriba-derecha
             (if (and (= 0 (get_piece (- ?y ?i) (+ ?x ?i))) (= 1 ?tr)) then
               ;Si encuentra un espacio libre y está comiendo, guarda el posible estado.
-              (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y ?i) (- ?x ?i)))))
+              (bind ?kills (append ?kills (implode$ (create$ ?y ?x (- ?y ?i) (+ ?x ?i)))))
             else
               (if (or (and (> 0 (* ?player (get_piece (- ?y ?i) (+ ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece (- ?y ?i) (+ ?x ?i))))) then
                 ;Si encuentra una ficha alida el flag se pone a 2 y no puede seguir comiendo.
@@ -332,6 +332,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     (return TRUE)
   )
   (printout t "Introduce un movimiento valido." crlf)
+  (return FALSE)
 )
 
 (deffunction MAIN::crown ()
@@ -340,11 +341,68 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
       (bind ?*board* (replace$ ?*board* (coord_to_board ?*SIZE* ?x) (coord_to_board ?*SIZE* ?x) 2))
     )
     (if (= -1 (get_piece 1 ?x)) then
-      (bind ?*board* (replace$ ?*board* (coord_to_board 1 ?x) (coord_to_board 1 ?x) -1))
+      (bind ?*board* (replace$ ?*board* (coord_to_board 1 ?x) (coord_to_board 1 ?x) -2))
     )
   )
 )
 
-(defmodule PLAYER)
+(defrule MAIN::victory "Termina la partida."
+  (victory ?v)
+  (computer_color ?c)
+=>
+  (switch (= ?v ?c)
+    (case TRUE then (printout t "Victoria del ORDENADOR." crlf))
+    (case FALSE then (printout t "Victoria del JUGADOR." crlf))
+  )
+  (halt)
+)
 
-(defmodule COMPUTER)
+(defmodule PLAYER (import MAIN ?ALL))
+
+(defrule PLAYER::player_turn "Realiza el turno del jugador."
+  (declare (salience 10))
+  (player_color ?c)
+  ?f <- (turn ?t)
+=>
+  (print_board)
+  (if (or (and (= 0 (length$ (check_moves ?c))) (= 0 (length$ (check_moves ?c)))) (and (not (member$ ?c ?*board*)) (not (member$ (* 2 ?c) ?*board*)))) then
+    (assert (victory (* -1 ?c)))
+    (return)
+  )
+  (printout t "INTRODUCE TU MOVIMIENTO JUGADOR" crlf)
+  (printout t "Introduce las coordenadas de la ficha quieres mover y las de la posición objetivo (\"y1 x1 y2 x2\")" crlf)
+  (bind ?move (readline))
+  (while (not (move ?c ?move)) do
+    (bind ?move (readline))
+  )
+  (crown)
+  (assert (turn (+ ?t 1)))
+  (retract ?f)
+  (pop-focus)
+  (focus COMPUTER)
+)
+
+(defmodule COMPUTER (import MAIN ?ALL))
+
+(defrule COMPUTER::computer_turn "Realiza el turno del jugador."
+  (declare (salience 10))
+  (computer_color ?c)
+  ?f <- (turn ?t)
+=>
+  (print_board)
+  (if (or (and (= 0 (length$ (check_moves ?c))) (= 0 (length$ (check_moves ?c)))) (and (not (member$ ?c ?*board*)) (not (member$ (* 2 ?c) ?*board*)))) then
+    (assert (victory (* -1 ?c)))
+    (return)
+  )
+  (printout t "INTRODUCE TU MOVIMIENTO ORDENADOR" crlf)
+  (printout t "Introduce las coordenadas de la ficha quieres mover y las de la posición objetivo (y1 x1 y2 x2)" crlf)
+  (bind ?move (readline))
+  (while (not (move ?c ?move)) do
+    (bind ?move (readline))
+  )
+  (crown)
+  (assert (turn (+ ?t 1)))
+  (retract ?f)
+  (pop-focus)
+  (focus PLAYER)
+)
