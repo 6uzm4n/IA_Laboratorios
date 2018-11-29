@@ -290,6 +290,21 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (return ?moves)
 )
 
+(deffunction MAIN::keep_killing (?player ?move)
+  (bind ?keep_killing FALSE)
+  (bind ?pos_kills (check_kills ?player))
+  (bind ?y (nth$ 3 (explode$ ?move)))
+  (bind ?x (nth$ 4 (explode$ ?move)))
+  (loop-for-count (?i 1 (length$ ?pos_kills)) do
+    (bind ?ny (nth$ 1 (explode$ (nth$ ?i ?pos_kills))))
+    (bind ?nx (nth$ 2 (explode$ (nth$ ?i ?pos_kills))))
+    (if (and (= ?y ?ny) (= ?x ?nx)) then
+      (bind ?keep_killing TRUE)
+    )
+  )
+  (return ?keep_killing)
+)
+
 (deffunction MAIN::move (?player ?move)
   (bind ?y (nth$ 1 (explode$ ?move)))
   (bind ?x (nth$ 2 (explode$ ?move)))
@@ -318,21 +333,21 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     (bind ?*board* (replace$ ?*board* (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (* 2 ?player)))
     (bind ?*board* (replace$ ?*board* (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (get_piece ?y ?x)))
     (bind ?*board* (replace$ ?*board* (coord_to_board ?y ?x) (coord_to_board ?y ?x) 0))
-    (return TRUE)
+    (return 2)
   )
   (if (and (member$ ?move ?pos_moves) (< 0 (length$ ?pos_kills))) then
     ;Si intenta mover pero puede comer.
     (printout t "Estas obligado a comer una ficha." crlf)
-    (return FALSE)
+    (return -1)
   )
   (if (member$ ?move ?pos_moves) then
     ;Si mueve una ficha.
     (bind ?*board* (replace$ ?*board* (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (get_piece ?y ?x)))
     (bind ?*board* (replace$ ?*board* (coord_to_board ?y ?x) (coord_to_board ?y ?x) 0))
-    (return TRUE)
+    (return 1)
   )
   (printout t "Introduce un movimiento valido." crlf)
-  (return FALSE)
+  (return -1)
 )
 
 (deffunction MAIN::crown ()
@@ -369,11 +384,20 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     (assert (victory (* -1 ?c)))
     (return)
   )
-  (printout t "INTRODUCE TU MOVIMIENTO JUGADOR" crlf)
-  (printout t "Introduce las coordenadas de la ficha quieres mover y las de la posición objetivo (\"y1 x1 y2 x2\")" crlf)
-  (bind ?move (readline))
-  (while (not (move ?c ?move)) do
+  (printout t "Introduce tu movimiento JUGADOR." crlf)
+  (printout t "Introduce las coordenadas de la ficha quieres mover y las de la posicion objetivo (y1 x1 y2 x2)" crlf)
+  (bind ?move_result -1)
+  (bind ?keep_killing FALSE)
+  (while (or (not (< 0 ?move_result)) ?keep_killing) do
     (bind ?move (readline))
+    (bind ?move_result (move ?c ?move))
+    (if (= 2 ?move_result) then
+      (bind ?keep_killing (keep_killing ?c ?move))
+      (if ?keep_killing then
+        (print_board)
+        (printout t "Sigue comiendo JUGADOR..." crlf)
+      )
+    )
   )
   (crown)
   (assert (turn (+ ?t 1)))
@@ -394,11 +418,20 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     (assert (victory (* -1 ?c)))
     (return)
   )
-  (printout t "INTRODUCE TU MOVIMIENTO ORDENADOR" crlf)
-  (printout t "Introduce las coordenadas de la ficha quieres mover y las de la posición objetivo (y1 x1 y2 x2)" crlf)
-  (bind ?move (readline))
-  (while (not (move ?c ?move)) do
+  (printout t "Introduce tu movimiento ORDENADOR" crlf)
+  (printout t "Introduce las coordenadas de la ficha quieres mover y las de la posicion objetivo (y1 x1 y2 x2)" crlf)
+  (bind ?move_result -1)
+  (bind ?keep_killing FALSE)
+  (while (or (not (< 0 ?move_result)) ?keep_killing) do
     (bind ?move (readline))
+    (bind ?move_result (move ?c ?move))
+    (if (= 2 ?move_result) then
+      (bind ?keep_killing (keep_killing ?c ?move))
+      (if ?keep_killing then
+        (print_board)
+        (printout t "Sigue comiendo ORDENADOR..." crlf)
+      )
+    )
   )
   (crown)
   (assert (turn (+ ?t 1)))
