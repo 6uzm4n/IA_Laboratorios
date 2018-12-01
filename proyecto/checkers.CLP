@@ -182,7 +182,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
             ;Arriba-izquierda
             (if (and (= 0 (get_piece (- ?y ?i) (- ?x ?i))) (= 1 ?tl)) then
               ;Si encuentra un espacio libre y está comiendo, guarda el posible estado.
-              (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y ?i) (- ?x ?i)))))
+              (bind ?kills (append ?kills (implode$ (create$ ?y ?x (- ?y ?i) (- ?x ?i)))))
             else
               (if (or (and (> 0 (* ?player (get_piece (- ?y ?i) (- ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece (- ?y ?i) (- ?x ?i))))) then
                 ;Si encuentra una ficha alida el flag se pone a 2 y no puede seguir comiendo.
