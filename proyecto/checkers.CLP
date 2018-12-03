@@ -17,32 +17,34 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (return (+ (* ?*SIZE* (- ?y 1)) ?x))
 )
 
-(deffunction MAIN::get_piece (?y ?x)
+(deffunction MAIN::get_piece (?board ?y ?x)
   ;Devuelve la ficha que se encuentra en unas coordenadas dadas del tablero.
-  (return (nth$ (coord_to_board ?y ?x) ?*board*))
+  (return (nth$ (coord_to_board ?y ?x) ?board))
 )
 
 (deffunction MAIN::initialize ()
 	;Inicia el tablero en la variable ?*board* en función de los parámetros definidos en ?*SIZE* y ?*CHECKERS*.
 	;La posición 1-1 es arriba a la izquierda, y la 8-8 abajo a la derecha. Los 0 son espacios vacíos.
   ;Los 1, 2, -1 y -2 son fichas y damas de cada jugador.
-	(loop-for-count (?y 1 ?*SIZE*) do
+  (bind ?board (create$))
+  (loop-for-count (?y 1 ?*SIZE*) do
 		(loop-for-count (?x 1 ?*SIZE*) do
 			(if (and (= 1 (mod (+ ?x ?y) 2)) (<= ?y ?*CHECKERS*)) then
-				(bind ?*board* (append ?*board* 1))
+				(bind ?board (append ?board 1))
 			else
 				(if (and (= 1 (mod (+ ?x ?y) 2)) (> ?y (- ?*SIZE* ?*CHECKERS*))) then
-					(bind ?*board* (append ?*board* -1))
+					(bind ?board (append ?board -1))
 				else
-					(bind ?*board* (append ?*board* 0))
+					(bind ?board (append ?board 0))
 				)
 			)
 		)
 	)
+  (return ?board)
 )
 
-(deffunction MAIN::print_board ()
-	;Imprime por pantalla ?*board*, el tablero de juego
+(deffunction MAIN::print_board (?board)
+	;Imprime por pantalla ?board, el tablero de juego
 	;Cada casilla de nuestro tablero tendrá el siguiente aspecto:
 	;	#######
 	;	#     #		- 7 caracteres en horizontal
@@ -58,7 +60,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 				(printout t "#")
 			else
 				(if (and (= 0 (mod ?y 2)) (= 0 (mod ?x 3))) then
-					(switch (nth$ ?i ?*board*)
+					(switch (nth$ ?i ?board)
 						(case 0 then (printout t " "))
 						(case 1 then (printout t "o"))
 						(case -1 then (printout t "x"))
@@ -114,30 +116,30 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     )
   )
   (assert (turn 1))
-  (initialize)
+  (assert (board (initialize)))
 )
 
-(deffunction MAIN::check_kills (?player)
+(deffunction MAIN::check_kills (?board ?player)
   ;Devuelve una lista de las posiciones en las que se encuentra una ficha que puede comer a otra.
   ;El parámetro player ha de ser 1 o -1 y define el jugador que come.
   (bind ?kills (create$))
   (loop-for-count (?y 1 ?*SIZE*) do
 		(loop-for-count (?x 1 ?*SIZE*) do
-      (if (= 1 (* (get_piece ?y ?x) ?player)) then
+      (if (= 1 (* (get_piece ?board ?y ?x) ?player)) then
         ;Calcula movimiento de fichas normales.
         (if (and (<= 1 (+ ?y (* 2 ?player))) (>= ?*SIZE* (+ ?y (* 2 ?player)))) then
           ;Si no se sale verticalmente.
-          (if (and (<= 1 (- ?x 2))       (> 0 (* ?player (get_piece (+ ?y ?player) (- ?x 1)))) (= 0 (get_piece (+ ?y (* 2 ?player)) (- ?x 2)))) then
+          (if (and (<= 1 (- ?x 2))       (> 0 (* ?player (get_piece ?board (+ ?y ?player) (- ?x 1)))) (= 0 (get_piece ?board (+ ?y (* 2 ?player)) (- ?x 2)))) then
             ;Si puede comer a izquierda
             (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y (* 2 ?player)) (- ?x 2)))))
           )
-          (if (and (>= ?*SIZE* (+ ?x 2)) (> 0 (* ?player (get_piece (+ ?y ?player) (+ ?x 1)))) (= 0 (get_piece (+ ?y (* 2 ?player)) (+ ?x 2)))) then
+          (if (and (>= ?*SIZE* (+ ?x 2)) (> 0 (* ?player (get_piece ?board (+ ?y ?player) (+ ?x 1)))) (= 0 (get_piece ?board (+ ?y (* 2 ?player)) (+ ?x 2)))) then
             ;Si puede comer a derecha
             (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y (* 2 ?player)) (+ ?x 2)))))
           )
         )
       )
-      (if (= 2 (* (get_piece ?y ?x) ?player)) then
+      (if (= 2 (* (get_piece ?board ?y ?x) ?player)) then
         ;Calcula movimiento de damas.
         (bind ?bl 0) ;Flag para cuando no puede seguir buscando por abajo-izquierda
         (bind ?br 0) ;Flag para cuando no puede seguir buscando por abajo-derecha
@@ -146,16 +148,16 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
         (loop-for-count (?i 1 (max ?x ?y (- ?*SIZE* ?x) (- ?*SIZE* ?y))) do
           (if (and (>= ?*SIZE* (+ ?y ?i))  (<= 1 (- ?x ?i)) (> 2 ?bl)) then
             ;Abajo-izquierda
-            (if (and (= 0 (get_piece (+ ?y ?i) (- ?x ?i))) (= 1 ?bl)) then
+            (if (and (= 0 (get_piece ?board (+ ?y ?i) (- ?x ?i))) (= 1 ?bl)) then
               ;Si encuentra un espacio libre y está comiendo, guarda el posible estado.
               (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y ?i) (- ?x ?i)))))
             else
-              (if (or (and (> 0 (* ?player (get_piece (+ ?y ?i) (- ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece (+ ?y ?i) (- ?x ?i))))) then
+              (if (or (and (> 0 (* ?player (get_piece ?board (+ ?y ?i) (- ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece ?board (+ ?y ?i) (- ?x ?i))))) then
                 ;Si encuentra una ficha alida el flag se pone a 2 y no puede seguir comiendo.
                 ;Si encuentra una ficha enemiga y el flag ya está a uno, se pone a 2 y no puede seguir comiendo.
                 (bind ?bl 2)
               else
-                (if (and (> 0 (* ?player (get_piece (+ ?y ?i) (- ?x ?i)))) (= 0 ?bl)) then
+                (if (and (> 0 (* ?player (get_piece ?board (+ ?y ?i) (- ?x ?i)))) (= 0 ?bl)) then
                   (bind ?bl 1)
                 )
               )
@@ -163,16 +165,16 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
           )
           (if (and (>= ?*SIZE* (+ ?y ?i))  (>= ?*SIZE* (+ ?x ?i)) (> 2 ?br)) then
             ;Abajo-derecha
-            (if (and (= 0 (get_piece (+ ?y ?i) (+ ?x ?i))) (= 1 ?br)) then
+            (if (and (= 0 (get_piece ?board (+ ?y ?i) (+ ?x ?i))) (= 1 ?br)) then
               ;Si encuentra un espacio libre y está comiendo, guarda el posible estado.
               (bind ?kills (append ?kills (implode$ (create$ ?y ?x (+ ?y ?i) (+ ?x ?i)))))
             else
-              (if (or (and (> 0 (* ?player (get_piece (+ ?y ?i) (+ ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece (+ ?y ?i) (+ ?x ?i))))) then
+              (if (or (and (> 0 (* ?player (get_piece ?board (+ ?y ?i) (+ ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece ?board (+ ?y ?i) (+ ?x ?i))))) then
                 ;Si encuentra una ficha alida el flag se pone a 2 y no puede seguir comiendo.
                 ;Si encuentra una ficha enemiga y el flag ya está a uno, se pone a 2 y no puede seguir comiendo.
                 (bind ?br 2)
               else
-                (if (and (> 0 (* ?player (get_piece (+ ?y ?i) (+ ?x ?i)))) (= 0 ?br)) then
+                (if (and (> 0 (* ?player (get_piece ?board (+ ?y ?i) (+ ?x ?i)))) (= 0 ?br)) then
                   (bind ?br 1)
                 )
               )
@@ -180,16 +182,16 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
           )
           (if (and (<= 1 (- ?y ?i))        (<= 1 (- ?x ?i)) (> 2 ?tl)) then
             ;Arriba-izquierda
-            (if (and (= 0 (get_piece (- ?y ?i) (- ?x ?i))) (= 1 ?tl)) then
+            (if (and (= 0 (get_piece ?board (- ?y ?i) (- ?x ?i))) (= 1 ?tl)) then
               ;Si encuentra un espacio libre y está comiendo, guarda el posible estado.
               (bind ?kills (append ?kills (implode$ (create$ ?y ?x (- ?y ?i) (- ?x ?i)))))
             else
-              (if (or (and (> 0 (* ?player (get_piece (- ?y ?i) (- ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece (- ?y ?i) (- ?x ?i))))) then
+              (if (or (and (> 0 (* ?player (get_piece ?board (- ?y ?i) (- ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece ?board (- ?y ?i) (- ?x ?i))))) then
                 ;Si encuentra una ficha alida el flag se pone a 2 y no puede seguir comiendo.
                 ;Si encuentra una ficha enemiga y el flag ya está a uno, se pone a 2 y no puede seguir comiendo.
                 (bind ?tl 2)
               else
-                (if (and (> 0 (* ?player (get_piece (- ?y ?i) (- ?x ?i)))) (= 0 ?tl)) then
+                (if (and (> 0 (* ?player (get_piece ?board (- ?y ?i) (- ?x ?i)))) (= 0 ?tl)) then
                   ;Si encuentra una ficha enemiga y el flag está a 0, lo pone a 1 y puede comer.
                   (bind ?tl 1)
                 )
@@ -198,16 +200,16 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
           )
           (if (and (<= 1 (- ?y ?i))        (>= ?*SIZE* (+ ?x ?i)) (> 2 ?tr)) then
             ;Arriba-derecha
-            (if (and (= 0 (get_piece (- ?y ?i) (+ ?x ?i))) (= 1 ?tr)) then
+            (if (and (= 0 (get_piece ?board (- ?y ?i) (+ ?x ?i))) (= 1 ?tr)) then
               ;Si encuentra un espacio libre y está comiendo, guarda el posible estado.
               (bind ?kills (append ?kills (implode$ (create$ ?y ?x (- ?y ?i) (+ ?x ?i)))))
             else
-              (if (or (and (> 0 (* ?player (get_piece (- ?y ?i) (+ ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece (- ?y ?i) (+ ?x ?i))))) then
+              (if (or (and (> 0 (* ?player (get_piece ?board (- ?y ?i) (+ ?x ?i)))) (= 1 ?tr))  (< 0 (* ?player (get_piece ?board (- ?y ?i) (+ ?x ?i))))) then
                 ;Si encuentra una ficha alida el flag se pone a 2 y no puede seguir comiendo.
                 ;Si encuentra una ficha enemiga y el flag ya está a uno, se pone a 2 y no puede seguir comiendo.
                 (bind ?tr 2)
               else
-                (if (and (> 0 (* ?player (get_piece (- ?y ?i) (+ ?x ?i)))) (= 0 ?tr)) then
+                (if (and (> 0 (* ?player (get_piece ?board (- ?y ?i) (+ ?x ?i)))) (= 0 ?tr)) then
                   (bind ?tr 1)
                 )
               )
@@ -220,27 +222,27 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (return ?kills)
 )
 
-(deffunction MAIN::check_moves (?player)
+(deffunction MAIN::check_moves (?board ?player)
   ;Devuelve una lista de las posiciones en las que se encuentra una ficha que puede moverse sin comer.
   ;El parámetro player ha de ser 1 o -1 y define el jugador que mueve.
   (bind ?moves (create$))
   (loop-for-count (?y 1 ?*SIZE*) do
 		(loop-for-count (?x 1 ?*SIZE*) do
-      (if (= 1 (* (get_piece ?y ?x) ?player)) then
+      (if (= 1 (* (get_piece ?board ?y ?x) ?player)) then
         ;Calcula movimiento de fichas normales.
         (if (and (<= 1 (+ ?y ?player)) (>= ?*SIZE* (+ ?y ?player))) then
           ;Si no se sale verticalmente.
-          (if (and (<= 1 (- ?x 1))         (= 0 (get_piece (+ ?y ?player) (- ?x 1)))) then
+          (if (and (<= 1 (- ?x 1))         (= 0 (get_piece ?board (+ ?y ?player) (- ?x 1)))) then
             ;Si puede mover la izquierda
             (bind ?moves (append ?moves (implode$ (create$ ?y ?x (+ ?y ?player) (- ?x 1)))))
           )
-          (if (and (>= ?*SIZE* (+ ?x 1))   (= 0 (get_piece (+ ?y ?player) (+ ?x 1)))) then
+          (if (and (>= ?*SIZE* (+ ?x 1))   (= 0 (get_piece ?board (+ ?y ?player) (+ ?x 1)))) then
             ;Si puede mover a la derecha
             (bind ?moves (append ?moves (implode$ (create$ ?y ?x (+ ?y ?player) (+ ?x 1)))))
           )
         )
       )
-      (if (= 2 (* (get_piece ?y ?x) ?player)) then
+      (if (= 2 (* (get_piece ?board ?y ?x) ?player)) then
         ;Calcula movimiento de damas.
         (bind ?bl TRUE) ;Flag para cuando no puede seguir buscando por abajo-izquierda
         (bind ?br TRUE) ;Flag para cuando no puede seguir buscando por abajo-derecha
@@ -249,7 +251,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
         (loop-for-count (?i 1 (max ?x ?y (- ?*SIZE* ?x) (- ?*SIZE* ?y))) do
           (if (and (>= ?*SIZE* (+ ?y ?i))  (<= 1 (- ?x ?i)) ?bl) then
             ;Abajo-izquierda
-            (if (= 0 (get_piece (+ ?y ?i) (- ?x ?i))) then
+            (if (= 0 (get_piece ?board (+ ?y ?i) (- ?x ?i))) then
               (bind ?moves (append ?moves (implode$ (create$ ?y ?x (+ ?y ?i) (- ?x ?i)))))
             else
               ;Si encuentra un obstáculo se pone el flag a FALSE
@@ -258,7 +260,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
           )
           (if (and (>= ?*SIZE* (+ ?y ?i))  (>= ?*SIZE* (+ ?x ?i)) ?br) then
             ;Abajo-derecha
-            (if (= 0 (get_piece (+ ?y ?i) (+ ?x ?i))) then
+            (if (= 0 (get_piece ?board (+ ?y ?i) (+ ?x ?i))) then
               (bind ?moves (append ?moves (implode$ (create$ ?y ?x (+ ?y ?i) (+ ?x ?i)))))
             else
               ;Si encuentra un obstáculo se pone el flag a FALSE
@@ -267,7 +269,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
           )
           (if (and (<= 1 (- ?y ?i))        (<= 1 (- ?x ?i)) ?tl) then
             ;Arriba-izquierda
-            (if (= 0 (get_piece (- ?y ?i) (- ?x ?i))) then
+            (if (= 0 (get_piece ?board (- ?y ?i) (- ?x ?i))) then
               (bind ?moves (append ?moves (implode$ (create$ ?y ?x (- ?y ?i) (- ?x ?i)))))
             else
               ;Si encuentra un obstáculo se pone el flag a FALSE
@@ -276,7 +278,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
           )
           (if (and (<= 1 (- ?y ?i))        (>= ?*SIZE* (+ ?x ?i)) ?tr) then
             ;Arriba-derecha
-            (if (= 0 (get_piece (- ?y ?i) (+ ?x ?i))) then
+            (if (= 0 (get_piece ?board (- ?y ?i) (+ ?x ?i))) then
               (bind ?moves (append ?moves (implode$ (create$ ?y ?x (- ?y ?i) (+  ?x ?i)))))
             else
               ;Si encuentra un obstáculo se pone el flag a FALSE
@@ -290,9 +292,9 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (return ?moves)
 )
 
-(deffunction MAIN::keep_killing (?player ?move)
+(deffunction MAIN::keep_killing (?board ?player ?move)
   (bind ?keep_killing FALSE)
-  (bind ?pos_kills (check_kills ?player))
+  (bind ?pos_kills (check_kills ?board ?player))
   (bind ?y (nth$ 3 (explode$ ?move)))
   (bind ?x (nth$ 4 (explode$ ?move)))
   (loop-for-count (?i 1 (length$ ?pos_kills)) do
@@ -305,16 +307,17 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (return ?keep_killing)
 )
 
-(deffunction MAIN::move (?player ?move)
+(deffunction MAIN::move (?board ?player ?move)
   (bind ?y (nth$ 1 (explode$ ?move)))
   (bind ?x (nth$ 2 (explode$ ?move)))
   (bind ?ny (nth$ 3 (explode$ ?move)))
   (bind ?nx (nth$ 4 (explode$ ?move)))
-  (bind ?pos_kills (check_kills ?player))
-  (bind ?pos_moves (check_moves ?player))
+  (bind ?pos_kills (check_kills ?board ?player))
+  (bind ?pos_moves (check_moves ?board ?player))
   (if (member$ ?move ?pos_kills) then
     ;Si come una ficha
     (bind ?i 1)
+    ;Define la diagonal en la que come según el movimiento.
     (if (< ?y ?ny) then
       (bind ?iy 1)
     else
@@ -326,39 +329,41 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
       (bind ?ix -1)
     )
     (while (not (= ?ny (+ ?y (* ?i ?iy)))) do
-      (bind ?*board* (replace$ ?*board* (coord_to_board (+ ?y (* ?i ?iy)) (+ ?x (* ?i ?ix)))
+      (bind ?board (replace$ ?board (coord_to_board (+ ?y (* ?i ?iy)) (+ ?x (* ?i ?ix)))
                                         (coord_to_board (+ ?y (* ?i ?iy)) (+ ?x (* ?i ?ix))) 0))
       (bind ?i (+ ?i 1))
     )
-    (bind ?*board* (replace$ ?*board* (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (* 2 ?player)))
-    (bind ?*board* (replace$ ?*board* (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (get_piece ?y ?x)))
-    (bind ?*board* (replace$ ?*board* (coord_to_board ?y ?x) (coord_to_board ?y ?x) 0))
-    (return 2)
+    (bind ?board (replace$ ?board (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (* 2 ?player)))
+    (bind ?board (replace$ ?board (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (get_piece ?board ?y ?x)))
+    (bind ?board (replace$ ?board (coord_to_board ?y ?x) (coord_to_board ?y ?x) 0))
+    (return (create$ 2 ?board))
   )
   (if (and (member$ ?move ?pos_moves) (< 0 (length$ ?pos_kills))) then
     ;Si intenta mover pero puede comer.
     (printout t "Estas obligado a comer una ficha." crlf)
-    (return -1)
+    (return (create$ -1))
   )
   (if (member$ ?move ?pos_moves) then
     ;Si mueve una ficha.
-    (bind ?*board* (replace$ ?*board* (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (get_piece ?y ?x)))
-    (bind ?*board* (replace$ ?*board* (coord_to_board ?y ?x) (coord_to_board ?y ?x) 0))
-    (return 1)
+    (bind ?board (replace$ ?board (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (get_piece ?board ?y ?x)))
+    (bind ?board (replace$ ?board (coord_to_board ?y ?x) (coord_to_board ?y ?x) 0))
+    (return (create$ 1 ?board))
   )
   (printout t "Introduce un movimiento valido." crlf)
-  (return -1)
+  (return (create$ -1))
 )
 
-(deffunction MAIN::crown ()
+
+(deffunction MAIN::crown (?board)
   (loop-for-count (?x 1 ?*SIZE*) do
-    (if (= 1 (get_piece ?*SIZE* ?x)) then
-      (bind ?*board* (replace$ ?*board* (coord_to_board ?*SIZE* ?x) (coord_to_board ?*SIZE* ?x) 2))
+    (if (= 1 (get_piece ?board ?*SIZE* ?x)) then
+      (bind ?board (replace$ ?board (coord_to_board ?*SIZE* ?x) (coord_to_board ?*SIZE* ?x) 2))
     )
-    (if (= -1 (get_piece 1 ?x)) then
-      (bind ?*board* (replace$ ?*board* (coord_to_board 1 ?x) (coord_to_board 1 ?x) -2))
+    (if (= -1 (get_piece ?board 1 ?x)) then
+      (bind ?board (replace$ ?board (coord_to_board 1 ?x) (coord_to_board 1 ?x) -2))
     )
   )
+  (return ?board)
 )
 
 (defrule MAIN::victory "Termina la partida."
@@ -377,31 +382,37 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defrule PLAYER::player_turn "Realiza el turno del jugador."
   (declare (salience 10))
   (player_color ?c)
-  ?f <- (turn ?t)
+  ?f1 <- (turn ?t)
+  ?f2 <- (board $?b)
 =>
-  (print_board)
-  (if (or (and (= 0 (length$ (check_moves ?c))) (= 0 (length$ (check_moves ?c)))) (and (not (member$ ?c ?*board*)) (not (member$ (* 2 ?c) ?*board*)))) then
+  (print_board ?b)
+  (if (or (and (= 0 (length$ (check_moves ?b ?c))) (= 0 (length$ (check_kills ?b ?c)))) (and (not (member$ ?c ?b)) (not (member$ (* 2 ?c) ?b)))) then
     (assert (victory (* -1 ?c)))
     (return)
   )
   (printout t "Introduce tu movimiento JUGADOR." crlf)
   (printout t "Introduce las coordenadas de la ficha quieres mover y las de la posicion objetivo (y1 x1 y2 x2)" crlf)
-  (bind ?move_result -1)
+  (bind ?move_result (create$ -1))
   (bind ?keep_killing FALSE)
-  (while (or (not (< 0 ?move_result)) ?keep_killing) do
+  (while (or (not (< 0 (nth$ 1 ?move_result))) ?keep_killing) do
     (bind ?move (readline))
-    (bind ?move_result (move ?c ?move))
-    (if (= 2 ?move_result) then
-      (bind ?keep_killing (keep_killing ?c ?move))
+    (bind ?move_result (move ?b ?c ?move))
+    (if (< 0 (nth$ 1 ?move_result)) then
+      (bind ?b (delete$ ?move_result 1 1))
+    )
+    (if (= 2 (nth$ 1 ?move_result)) then
+      (bind ?keep_killing (keep_killing ?b ?c ?move))
       (if ?keep_killing then
-        (print_board)
+        (print_board ?b)
         (printout t "Sigue comiendo JUGADOR..." crlf)
       )
     )
   )
-  (crown)
+  (bind ?b (crown ?b))
+  (retract ?f1)
+  (retract ?f2)
   (assert (turn (+ ?t 1)))
-  (retract ?f)
+  (assert (board ?b))
   (pop-focus)
   (focus COMPUTER)
 )
@@ -411,31 +422,37 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defrule COMPUTER::computer_turn "Realiza el turno del jugador."
   (declare (salience 10))
   (computer_color ?c)
-  ?f <- (turn ?t)
-=>
-  (print_board)
-  (if (or (and (= 0 (length$ (check_moves ?c))) (= 0 (length$ (check_moves ?c)))) (and (not (member$ ?c ?*board*)) (not (member$ (* 2 ?c) ?*board*)))) then
+  ?f1 <- (turn ?t)
+  ?f2 <- (board $?b)
+  =>
+  (print_board ?b)
+  (if (or (and (= 0 (length$ (check_moves ?b ?c))) (= 0 (length$ (check_kills ?b ?c)))) (and (not (member$ ?c ?b)) (not (member$ (* 2 ?c) ?b)))) then
     (assert (victory (* -1 ?c)))
     (return)
   )
-  (printout t "Introduce tu movimiento ORDENADOR" crlf)
+  (printout t "Introduce tu movimiento ORDENADOR." crlf)
   (printout t "Introduce las coordenadas de la ficha quieres mover y las de la posicion objetivo (y1 x1 y2 x2)" crlf)
-  (bind ?move_result -1)
+  (bind ?move_result (create$ -1))
   (bind ?keep_killing FALSE)
-  (while (or (not (< 0 ?move_result)) ?keep_killing) do
+  (while (or (not (< 0 (nth$ 1 ?move_result))) ?keep_killing) do
     (bind ?move (readline))
-    (bind ?move_result (move ?c ?move))
-    (if (= 2 ?move_result) then
-      (bind ?keep_killing (keep_killing ?c ?move))
+    (bind ?move_result (move ?b ?c ?move))
+    (if (< 0 (nth$ 1 ?move_result)) then
+      (bind ?b (delete$ ?move_result 1 1))
+    )
+    (if (= 2 (nth$ 1 ?move_result)) then
+      (bind ?keep_killing (keep_killing ?b ?c ?move))
       (if ?keep_killing then
-        (print_board)
+        (print_board ?b)
         (printout t "Sigue comiendo ORDENADOR..." crlf)
       )
     )
   )
-  (crown)
+  (bind ?b (crown ?b))
   (assert (turn (+ ?t 1)))
-  (retract ?f)
+  (assert (board ?b))
+  (retract ?f1)
+  (retract ?f2)
   (pop-focus)
   (focus PLAYER)
 )
