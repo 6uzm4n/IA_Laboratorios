@@ -2,8 +2,8 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defglobal ?*CHECKERS* = 3) ;Filas de fichas para cada jugador. Predeterminadas: 3
 (defglobal ?*WHITE* = 1) ;Signo de las fichas negras.
 (defglobal ?*BLACK* = -1)  ;Signo de las fichas blancas
+(defglobal ?*DEPTH* = 10)  ;Profundidad a la que llega el árbol de búsqueda.
 
-(defglobal ?*board* = (create$)) ;Multicampo que contiene el tablero.
 
 (defmodule MAIN (export ?ALL))
 
@@ -40,6 +40,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 			)
 		)
 	)
+  (printout t ?board crlf)
   (return ?board)
 )
 
@@ -52,7 +53,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 	;	#     #		- El caracter central representa el contenido (" ", "@" o "O")
 	;	#######
 
-	(clear-window)
+	;(clear-window)
 	(bind ?i 1)
 	(loop-for-count (?y 0 (* 4 ?*SIZE*)) do
 		(loop-for-count (?x 0 (* 6 ?*SIZE*)) do
@@ -292,15 +293,21 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (return ?moves)
 )
 
+(deffunction MAIN::consecutive (?move1 ?move2)
+  ;Dados dos movimientos, devuelve TRUE si son consecutivos y FALSE si no lo son.
+  (bind ?y (nth$ 3 (explode$ ?move1)))
+  (bind ?x (nth$ 4 (explode$ ?move1)))
+  (bind ?ny (nth$ 1 (explode$ ?move2)))
+  (bind ?nx (nth$ 2 (explode$ ?move2)))
+  (return (and (= ?y ?ny) (= ?x ?nx)))
+)
+
 (deffunction MAIN::keep_killing (?board ?player ?move)
+  ;Dado un tablero y un movimiento previo de un jugador, calcula si puede seguir comiendo fichas.
   (bind ?keep_killing FALSE)
   (bind ?pos_kills (check_kills ?board ?player))
-  (bind ?y (nth$ 3 (explode$ ?move)))
-  (bind ?x (nth$ 4 (explode$ ?move)))
-  (loop-for-count (?i 1 (length$ ?pos_kills)) do
-    (bind ?ny (nth$ 1 (explode$ (nth$ ?i ?pos_kills))))
-    (bind ?nx (nth$ 2 (explode$ (nth$ ?i ?pos_kills))))
-    (if (and (= ?y ?ny) (= ?x ?nx)) then
+  (foreach ?kill ?pos_kills
+    (if (consecutive ?move ?kill) then
       (bind ?keep_killing TRUE)
     )
   )
@@ -419,12 +426,88 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defmodule COMPUTER (import MAIN ?ALL))
 
+(deftemplate COMPUTER::node
+  (slot father)
+  (multislot board)
+  (multislot move)
+  (slot value)
+  (slot depth)
+)
+
+(deftemplate COMPUTER::combo_move
+  (multislot board)
+  (slot depth)
+  (slot turn)
+  (multislot moves)
+  (slot father)
+)
+
+(defrule COMPUTER::start_tree "Inicializa el árbol de búsqueda de movimientos."
+  (declare (salience 20))
+  (board $?b)
+=>
+  (assert (node (father 0) (board $?b) (move "") (value nil) (depth 0)))
+)
+
+(defrule COMPUTER::build_tree "Inicializa el árbol de búsqueda de movimientos."
+  (declare (salience 20))
+  (computer_color ?cc)
+  ?f <- (node (board $?b) (depth ?d))
+  (test (< ?d ?*DEPTH*))
+=>
+  (switch (mod ?d 2)
+    (case 0 then (bind ?turn ?cc))
+    (case 1 then (bind ?turn (* -1 ?cc)))
+  )
+  (bind ?move_list (check_moves $?b ?turn))
+  (bind ?kill_list (check_kills $?b ?turn))
+  (if (= 0 (length$ ?kill_list)) then
+    ;Si no se puede comer
+    (foreach ?move ?move_list
+      (assert (node (father ?f) (board (delete$ (move $?b ?turn ?move) 1 1)) (move ?move) (value nil) (depth (+ ?d 1))))
+    )
+  else
+    ;Si se puede comer
+    (foreach ?kill ?kill_list
+      ;(printout t ?f crlf)
+      (bind ?tmp_board (delete$ (move $?b ?turn ?kill) 1 1))
+      (bind ?keep_killing (keep_killing ?tmp_board ?turn ?kill))
+      (if ?keep_killing then
+        ;En caso de que se pueda seguir comiendo lo checkeamos en otro método.
+        (assert (combo_move (board ?tmp_board) (depth ?d) (turn ?turn) (moves (create$ ?kill)) (father ?f)))
+      else
+        ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
+        (assert (node (father ?f) (board ?tmp_board) (move ?kill) (value nil) (depth (+ ?d 1))))
+      )
+    )
+  )
+)
+
+(defrule COMPUTER::check_combos "Inicializa el árbol de búsqueda de movimientos."
+  (declare (salience 50))
+  ?f <- (combo_move (board $?board) (turn ?turn) (depth ?depth) (moves $?moves) (father ?father))
+=>
+  (bind ?kill_list (check_kills ?board ?turn))
+  (foreach ?kill ?kill_list
+    (bind ?tmp_board (delete$ (move ?board ?turn ?kill) 1 1))
+    (bind ?keep_killing (keep_killing ?tmp_board ?turn ?kill))
+    (if ?keep_killing then
+      ;En caso de que se pueda seguir comiendo lo ponemos a la cola para volver a checkear..
+      (assert (combo_move (board ?tmp_board) (depth ?depth) (turn ?turn) (moves (append ?moves ?kill)) (father ?f)))
+    else
+      ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
+      (assert (node (father ?father) (board ?tmp_board) (move (append ?moves ?kill)) (value nil) (depth (+ ?depth 1))))
+    )
+  )
+  (retract ?f)
+)
+
 (defrule COMPUTER::computer_turn "Realiza el turno del jugador."
   (declare (salience 10))
   (computer_color ?c)
   ?f1 <- (turn ?t)
   ?f2 <- (board $?b)
-  =>
+=>
   (print_board ?b)
   (if (or (and (= 0 (length$ (check_moves ?b ?c))) (= 0 (length$ (check_kills ?b ?c)))) (and (not (member$ ?c ?b)) (not (member$ (* 2 ?c) ?b)))) then
     (assert (victory (* -1 ?c)))
