@@ -1,0 +1,16 @@
+
+Elegir manualmente quien empieza. (Humano o Maquina)
+
+	Turnos.
+		
+
+		
+Movimientos posibles:
+	Ficha:
+		Movimiento normal
+			Diagonal izquierda
+			Diagonal derecha
+		Comer (Obligatorio)
+			Movimiento normal, pasando por encima de una ficha contraria [[Debe de haber un espacio libre detras de la otra ficha. ]]
+			Se puede cambiar la direccion a la hora de comer de forma consecutiva en el mismo movimiento. 
+	Dama:

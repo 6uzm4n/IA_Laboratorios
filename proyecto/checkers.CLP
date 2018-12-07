@@ -2,7 +2,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defglobal ?*CHECKERS* = 3) ;Filas de fichas para cada jugador. Predeterminadas: 3
 (defglobal ?*WHITE* = 1) ;Signo de las fichas negras.
 (defglobal ?*BLACK* = -1)  ;Signo de las fichas blancas
-(defglobal ?*DEPTH* = 10)  ;Profundidad a la que llega el árbol de búsqueda.
+(defglobal ?*DEPTH* = 3)  ;Profundidad a la que llega el árbol de búsqueda.
 
 
 (defmodule MAIN (export ?ALL))
@@ -468,6 +468,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     )
   else
     ;Si se puede comer
+	(printout t "Se puede comer; Depth: " (+ 1 ?d ) " Father: " ?f " " crlf) ;Debug
     (foreach ?kill ?kill_list
       ;(printout t ?f crlf)
       (bind ?tmp_board (delete$ (move $?b ?turn ?kill) 1 1))
@@ -502,7 +503,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (retract ?f)
 )
 
-(defrule COMPUTER::computer_turn "Realiza el turno del jugador."
+(defrule COMPUTER::computer_turn "Realiza el turno del ordenador."
   (declare (salience 10))
   (computer_color ?c)
   ?f1 <- (turn ?t)
