@@ -2,10 +2,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defglobal ?*CHECKERS* = 3) ;Filas de fichas para cada jugador. Predeterminadas: 3
 (defglobal ?*WHITE* = 1) ;Signo de las fichas negras.
 (defglobal ?*BLACK* = -1)  ;Signo de las fichas blancas
-<<<<<<< HEAD
-=======
-(defglobal ?*DEPTH* = 5)  ;Profundidad a la que llega el árbol de búsqueda.
->>>>>>> bb9434603d065d6d218a809ac3f642895dddf9a1
+(defglobal ?*DEPTH* = 3)  ;Profundidad a la que llega el árbol de búsqueda.
 
 
 (defmodule MAIN (export ?ALL))
@@ -43,7 +40,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 			)
 		)
 	)
-  (printout t ?board crlf)
+  ;(printout t ?board crlf) Debug, printea el tablero. 
   (return ?board)
 )
 
@@ -396,6 +393,14 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defmodule PLAYER (import MAIN ?ALL))
 
+(defrule PLAYER::clear_tree "Limpia el arbol de busqueda."
+  (declare (salience 20))
+  ?f1 <- (node )
+=>
+  (retract ?f1)
+)
+
+
 (defrule PLAYER::player_turn "Realiza el turno del jugador."
   (declare (salience 10))
   (player_color ?c)
@@ -434,6 +439,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (focus COMPUTER)
 )
 
+
 (defmodule COMPUTER (import MAIN ?ALL))
 
 (deftemplate COMPUTER::node
@@ -451,6 +457,8 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (multislot moves)
   (slot father)
 )
+
+
 
 (defrule COMPUTER::start_tree "Inicializa el árbol de búsqueda de movimientos."
   (declare (salience 20))
@@ -474,11 +482,19 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (if (= 0 (length$ ?kill_list)) then
     ;Si no se puede comer
     (foreach ?move ?move_list
-      (assert (node (father ?f) (board (delete$ (move $?b ?turn ?move) 1 1)) (move ?move) (value nil) (depth (+ ?d 1))))
+		
+		(if (= (+ ?d 1) ?*DEPTH*) then
+			(bind ?heur (heur_value $?b))
+			;(printout t "Valor heuristico: " ?heur crlf) ;//Debug
+		else
+			(bind ?heur nil)
+		)
+		
+		(assert (node (father ?f) (board (delete$ (move $?b ?turn ?move) 1 1)) (move ?move) (value ?heur) (depth (+ ?d 1))))
     )
   else
     ;Si se puede comer
-	(printout t "Se puede comer; Depth: " (+ 1 ?d ) " Father: " ?f " " crlf) ;Debug
+	;(printout t "Se puede comer; Depth: " (+ 1 ?d ) " Father: " ?f " " crlf) ;//Debug
     (foreach ?kill ?kill_list
       ;(printout t ?f crlf)
       (bind ?tmp_board (delete$ (move $?b ?turn ?kill) 1 1))
@@ -488,11 +504,38 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
         (assert (combo_move (board ?tmp_board) (depth ?d) (turn ?turn) (moves (create$ ?kill)) (father ?f)))
       else
         ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
-        (assert (node (father ?f) (board ?tmp_board) (move ?kill) (value nil) (depth (+ ?d 1))))
+		(if (= (+ ?d 1) ?*DEPTH*) then
+			(bind ?heur (heur_value $?b))
+			;(printout t "Valor heuristico: " ?heur crlf) ;//Debug
+		else
+			(bind ?heur nil)
+		)
+        (assert (node (father ?f) (board ?tmp_board) (move ?kill) (value ?heur) (depth (+ ?d 1))))
       )
     )
   )
 )
+
+(defrule COMPUTER::heur_expand "Expande el heuristico."
+	(declare (salience 15))
+	?f1 <- (node (depth ?d1) (value ?v1))
+	?f2 <- (node (depth ?d2) (value ?v2) (father ?f1))
+=>
+	(if (eq ?v1 nil) then
+		(modify ?f1 (value ?v2))
+	else
+		(if (= 0 (mod 2 (+ 2 ?d1))) then
+			(if (< ?v1 ?v2) then
+				(modify ?f1 (value ?v2))
+			)
+		else
+			(if (> ?v1 ?v2) then
+				(modify ?f1 (value ?v2))
+			)
+		)
+	)
+)
+		
 
 (defrule COMPUTER::check_combos "Inicializa el árbol de búsqueda de movimientos."
   (declare (salience 50))
