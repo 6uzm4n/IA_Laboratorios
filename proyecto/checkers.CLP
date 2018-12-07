@@ -2,7 +2,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defglobal ?*CHECKERS* = 3) ;Filas de fichas para cada jugador. Predeterminadas: 3
 (defglobal ?*WHITE* = 1) ;Signo de las fichas negras.
 (defglobal ?*BLACK* = -1)  ;Signo de las fichas blancas
-(defglobal ?*DEPTH* = 10)  ;Profundidad a la que llega el árbol de búsqueda.
+(defglobal ?*DEPTH* = 5)  ;Profundidad a la que llega el árbol de búsqueda.
 
 
 (defmodule MAIN (export ?ALL))
@@ -79,6 +79,13 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 	)
 	(printout t crlf)
 	(return)
+)
+
+(deffunction MAIN::heur_value (?board)
+  ;Dado un tablero devuelve un valor heurístico que representa el estado del tablero. Cuanto mayor sea,
+  ;se considera que el tablero es más beneficioso para las fichas blancas. De la misma forma, cuanto
+  ;menor sea se considerará mejor tablero para las negras.
+  (return (random -100 100))
 )
 
 (defrule MAIN::start "Crea el tablero y da comienzo a la partida."
@@ -489,14 +496,17 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 =>
   (bind ?kill_list (check_kills ?board ?turn))
   (foreach ?kill ?kill_list
-    (bind ?tmp_board (delete$ (move ?board ?turn ?kill) 1 1))
-    (bind ?keep_killing (keep_killing ?tmp_board ?turn ?kill))
-    (if ?keep_killing then
-      ;En caso de que se pueda seguir comiendo lo ponemos a la cola para volver a checkear..
-      (assert (combo_move (board ?tmp_board) (depth ?depth) (turn ?turn) (moves (append ?moves ?kill)) (father ?f)))
-    else
-      ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
-      (assert (node (father ?father) (board ?tmp_board) (move (append ?moves ?kill)) (value nil) (depth (+ ?depth 1))))
+    (if (consecutive (nth$ (length$ $?moves) $?moves) ?kill) then
+      ;Si el movimiento es consecutivo al último que se ha realizado
+      (bind ?tmp_board (delete$ (move ?board ?turn ?kill) 1 1))
+      (bind ?keep_killing (keep_killing ?tmp_board ?turn ?kill))
+      (if ?keep_killing then
+        ;En caso de que se pueda seguir comiendo lo ponemos a la cola para volver a checkear..
+        (assert (combo_move (board ?tmp_board) (depth ?depth) (turn ?turn) (moves (append ?moves ?kill)) (father ?f)))
+      else
+        ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
+        (assert (node (father ?father) (board ?tmp_board) (move (append ?moves ?kill)) (value nil) (depth (+ ?depth 1))))
+      )
     )
   )
   (retract ?f)
