@@ -2,8 +2,9 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defglobal ?*CHECKERS* = 3) ;Filas de fichas para cada jugador. Predeterminadas: 3
 (defglobal ?*WHITE* = 1) ;Signo de las fichas negras.
 (defglobal ?*BLACK* = -1)  ;Signo de las fichas blancas
-(defglobal ?*DEPTH* = 3)  ;Profundidad a la que llega el árbol de búsqueda.
+(defglobal ?*DEPTH* = 6)  ;Profundidad a la que llega el árbol de búsqueda.
 
+(defglobal ?*NEWID* = 0) ;Almacena el último id que se ha dado a un nodo del arbol.
 
 (defmodule MAIN (export ?ALL))
 
@@ -40,7 +41,6 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 			)
 		)
 	)
-  ;(printout t ?board crlf) Debug, printea el tablero. 
   (return ?board)
 )
 
@@ -85,7 +85,17 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   ;Dado un tablero devuelve un valor heurístico que representa el estado del tablero. Cuanto mayor sea,
   ;se considera que el tablero es más beneficioso para las fichas blancas. De la misma forma, cuanto
   ;menor sea se considerará mejor tablero para las negras.
-  (return (random -100 100))
+  (bind ?heur 0)
+  (foreach ?piece ?board
+    (bind ?heur (+ ?heur (* 100 ?piece)))
+  )
+  (if (and (not (member$ -1 ?board)) (not (member$ -2 ?board))) then
+    (return 999999)
+  )
+  (if (and (not (member$ 1 ?board)) (not (member$ 2 ?board))) then
+    (return -999999)
+  )
+  (return ?heur)
 )
 
 (defrule MAIN::start "Crea el tablero y da comienzo a la partida."
@@ -393,14 +403,6 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defmodule PLAYER (import MAIN ?ALL))
 
-(defrule PLAYER::clear_tree "Limpia el arbol de busqueda."
-  (declare (salience 20))
-  ?f1 <- (node )
-=>
-  (retract ?f1)
-)
-
-
 (defrule PLAYER::player_turn "Realiza el turno del jugador."
   (declare (salience 10))
   (player_color ?c)
@@ -443,11 +445,14 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defmodule COMPUTER (import MAIN ?ALL))
 
 (deftemplate COMPUTER::node
+  (slot id)
   (slot father)
   (multislot board)
   (multislot move)
   (slot value)
   (slot depth)
+  (slot visited)
+  (slot cut)
 )
 
 (deftemplate COMPUTER::combo_move
@@ -458,19 +463,19 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (slot father)
 )
 
-
-
 (defrule COMPUTER::start_tree "Inicializa el árbol de búsqueda de movimientos."
-  (declare (salience 20))
+  (declare (salience 25))
+  (not (alfabeta))
   (board $?b)
 =>
-  (assert (node (father 0) (board $?b) (move "") (value nil) (depth 0)))
+  (assert (node (id 0) (father nil) (board $?b) (move "") (value nil) (depth 0) (cut FALSE)))
 )
 
-(defrule COMPUTER::build_tree "Inicializa el árbol de búsqueda de movimientos."
-  (declare (salience 20))
+(defrule COMPUTER::build_tree "Construye el árbol de búsqueda de movimientos."
+  (declare (salience 25))
+  (not (alfabeta))
   (computer_color ?cc)
-  ?f <- (node (board $?b) (depth ?d))
+  ?f <- (node (id ?id) (board $?b) (depth ?d))
   (test (< ?d ?*DEPTH*))
 =>
   (switch (mod ?d 2)
@@ -482,62 +487,40 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (if (= 0 (length$ ?kill_list)) then
     ;Si no se puede comer
     (foreach ?move ?move_list
-		
-		(if (= (+ ?d 1) ?*DEPTH*) then
-			(bind ?heur (heur_value $?b))
-			;(printout t "Valor heuristico: " ?heur crlf) ;//Debug
-		else
-			(bind ?heur nil)
-		)
-		
-		(assert (node (father ?f) (board (delete$ (move $?b ?turn ?move) 1 1)) (move ?move) (value ?heur) (depth (+ ?d 1))))
+      (bind ?tmp_board (delete$ (move $?b ?turn ?move) 1 1))
+      (bind ?tmp_board (crown ?tmp_board))
+  		(if (= (+ ?d 1) ?*DEPTH*) then
+  			(bind ?heur (heur_value ?tmp_board))
+  		else
+  			(bind ?heur nil)
+  		)
+      (bind ?*NEWID* (+ ?*NEWID* 1))
+  		(assert (node (id ?*NEWID*) (father ?id) (board ?tmp_board) (move ?move) (value ?heur) (depth (+ ?d 1)) (cut FALSE) (visited FALSE)))
     )
   else
     ;Si se puede comer
-	;(printout t "Se puede comer; Depth: " (+ 1 ?d ) " Father: " ?f " " crlf) ;//Debug
     (foreach ?kill ?kill_list
-      ;(printout t ?f crlf)
       (bind ?tmp_board (delete$ (move $?b ?turn ?kill) 1 1))
       (bind ?keep_killing (keep_killing ?tmp_board ?turn ?kill))
       (if ?keep_killing then
         ;En caso de que se pueda seguir comiendo lo checkeamos en otro método.
-        (assert (combo_move (board ?tmp_board) (depth ?d) (turn ?turn) (moves (create$ ?kill)) (father ?f)))
+        (assert (combo_move (board ?tmp_board) (depth ?d) (turn ?turn) (moves (create$ ?kill)) (father ?id)))
       else
         ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
-		(if (= (+ ?d 1) ?*DEPTH*) then
-			(bind ?heur (heur_value $?b))
-			;(printout t "Valor heuristico: " ?heur crlf) ;//Debug
-		else
-			(bind ?heur nil)
-		)
-        (assert (node (father ?f) (board ?tmp_board) (move ?kill) (value ?heur) (depth (+ ?d 1))))
+        (bind ?tmp_board (crown ?tmp_board))
+    		(if (= (+ ?d 1) ?*DEPTH*) then
+    			(bind ?heur (heur_value ?tmp_board))
+    		else
+    			(bind ?heur nil)
+    		)
+        (bind ?*NEWID* (+ ?*NEWID* 1))
+        (assert (node (id ?*NEWID*) (father ?id) (board ?tmp_board) (move ?kill) (value ?heur) (depth (+ ?d 1)) (cut FALSE) (visited FALSE)))
       )
     )
   )
 )
 
-(defrule COMPUTER::heur_expand "Expande el heuristico."
-	(declare (salience 15))
-	?f1 <- (node (depth ?d1) (value ?v1))
-	?f2 <- (node (depth ?d2) (value ?v2) (father ?f1))
-=>
-	(if (eq ?v1 nil) then
-		(modify ?f1 (value ?v2))
-	else
-		(if (= 0 (mod 2 (+ 2 ?d1))) then
-			(if (< ?v1 ?v2) then
-				(modify ?f1 (value ?v2))
-			)
-		else
-			(if (> ?v1 ?v2) then
-				(modify ?f1 (value ?v2))
-			)
-		)
-	)
-)
-		
-
-(defrule COMPUTER::check_combos "Inicializa el árbol de búsqueda de movimientos."
+(defrule COMPUTER::check_combos "Calcula los movimientos consecutivos."
   (declare (salience 50))
   ?f <- (combo_move (board $?board) (turn ?turn) (depth ?depth) (moves $?moves) (father ?father))
 =>
@@ -549,48 +532,116 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
       (bind ?keep_killing (keep_killing ?tmp_board ?turn ?kill))
       (if ?keep_killing then
         ;En caso de que se pueda seguir comiendo lo ponemos a la cola para volver a checkear..
-        (assert (combo_move (board ?tmp_board) (depth ?depth) (turn ?turn) (moves (append ?moves ?kill)) (father ?f)))
+        (assert (combo_move (board ?tmp_board) (depth ?depth) (turn ?turn) (moves (append ?moves ?kill)) (father ?father)))
       else
         ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
-        (assert (node (father ?father) (board ?tmp_board) (move (append ?moves ?kill)) (value nil) (depth (+ ?depth 1))))
+        (bind ?*NEWID* (+ ?*NEWID* 1))
+        (bind ?tmp_board (crown ?tmp_board))
+        (if (= (+ ?depth 1) ?*DEPTH*) then
+    			(bind ?heur (heur_value ?tmp_board))
+    		else
+    			(bind ?heur nil)
+    		)
+        (assert (node (id ?*NEWID*) (father ?father) (board ?tmp_board) (move (append ?moves ?kill)) (value ?heur) (depth (+ ?depth 1)) (cut FALSE)))
       )
     )
   )
   (retract ?f)
 )
 
-(defrule COMPUTER::computer_turn "Realiza el turno del ordenador."
-  (declare (salience 10))
-  (computer_color ?c)
-  ?f1 <- (turn ?t)
-  ?f2 <- (board $?b)
+(defrule COMPUTER::alfabeta "Marca el fin de la construcción del árbol y comienza el algoritmo alfabeta."
+  (declare (salience 24))
+  (board $?b)
 =>
-  (print_board ?b)
-  (if (or (and (= 0 (length$ (check_moves ?b ?c))) (= 0 (length$ (check_kills ?b ?c)))) (and (not (member$ ?c ?b)) (not (member$ (* 2 ?c) ?b)))) then
-    (assert (victory (* -1 ?c)))
-    (return)
-  )
-  (printout t "Introduce tu movimiento ORDENADOR." crlf)
-  (printout t "Introduce las coordenadas de la ficha quieres mover y las de la posicion objetivo (y1 x1 y2 x2)" crlf)
-  (bind ?move_result (create$ -1))
-  (bind ?keep_killing FALSE)
-  (while (or (not (< 0 (nth$ 1 ?move_result))) ?keep_killing) do
-    (bind ?move (readline))
-    (bind ?move_result (move ?b ?c ?move))
-    (if (< 0 (nth$ 1 ?move_result)) then
-      (bind ?b (delete$ ?move_result 1 1))
-    )
-    (if (= 2 (nth$ 1 ?move_result)) then
-      (bind ?keep_killing (keep_killing ?b ?c ?move))
-      (if ?keep_killing then
-        (print_board ?b)
-        (printout t "Sigue comiendo ORDENADOR..." crlf)
-      )
-    )
-  )
-  (bind ?b (crown ?b))
-  (assert (turn (+ ?t 1)))
-  (assert (board ?b))
+  ;(halt)
+  (assert (alfabeta))
+)
+
+(defrule COMPUTER::heur_expand "Expande el heuristico."
+	(declare (salience 15))
+	?f1 <- (node (id ?id1) (depth ?d1) (value ?v1) (cut FALSE))
+	?f2 <- (node (id ?id2) (depth ?d2) (value ?v2) (father ?id1) (visited FALSE))
+  (not (node (father ?id2) (visited FALSE)))
+  (test (not (eq ?v2 nil)))
+=>
+  (modify ?f2 (visited TRUE))
+	(if (eq ?v1 nil) then
+		(modify ?f1 (value ?v2))
+	else
+		(if (= 0 (mod ?d1 2)) then
+			(if (< ?v1 ?v2) then
+				(modify ?f1 (value ?v2))
+			)
+		else
+			(if (> ?v1 ?v2) then
+				(modify ?f1 (value ?v2))
+			)
+		)
+	)
+)
+
+(defrule COMPUTER::cut_max "Poda el árbol bajo nodos max."
+	(declare (salience 20))
+	(node (id ?id) (depth ?d1) (value ?v1))
+	?f <- (node (depth ?d2) (value ?v2) (father ?id) (cut FALSE) (visited FALSE))
+  (test (and (not (eq ?v1 nil)) (not (eq ?v2 nil)) (< ?d2 ?*DEPTH*) (< ?v2 ?v1) (= 0 (mod ?d1 2))))
+=>
+  (modify ?f (cut TRUE))
+)
+
+(defrule COMPUTER::cut_min "Poda el árbol bajo nodos min."
+	(declare (salience 20))
+	(node (id ?id1) (depth ?d1) (value ?v1))
+  ?f <- (node (depth ?d2) (value ?v2) (father ?id1) (cut FALSE) (visited FALSE))
+  (test (and (not (eq ?v1 nil)) (not (eq ?v2 nil)) (< ?d2 ?*DEPTH*) (> ?v2 ?v1) (= 1 (mod ?d1 2))))
+=>
+  (modify ?f (cut TRUE))
+)
+
+(defrule COMPUTER::cut_clear "Elimina las hojas del arbol de búsqueda bajo un nodo cortado."
+  (declare (salience 20))
+  (node (id ?id1) (cut TRUE))
+  ?f <- (node (father ?id1) (visited FALSE))
+=>
+  (retract ?f)
+)
+
+(defrule COMPUTER::cut_orphan "Elimina los nodos huérfano."
+  (declare (salience 20))
+  ?f <- (node (father ?id1))
+  (not (node (id ?id1)))
+  (test (not (eq nil ?id1)))
+=>
+  (retract ?f)
+)
+
+(defrule COMPUTER::cpu_move "Realiza el movimiento que haya calculado el árbol."
+  (declare (salience 10))
+  (alfabeta)
+  ?f <- (board $?b)
+  (node (depth 0) (value ?v1))
+  (node (depth 1) (value ?v1) (move ?move) (board $?new_board))
+=>
+  (printout t "Movimiento del ordenador: " ?move crlf)
+  (retract ?f)
+  (assert (board ?new_board))
+  (assert (endturn))
+)
+
+(defrule COMPUTER::final_clear "Limpia el árbol de búsqueda después de acabar ésta."
+  (declare (salience 20))
+  (endturn)
+  ?f <- (node)
+=>
+  (retract ?f)
+)
+
+(defrule COMPUTER::end_turn "Termina el turno del ordenador."
+  (declare (salience 10))
+  ?f1 <- (alfabeta)
+  ?f2 <- (endturn)
+=>
+  (bind ?*NEWID* 0)
   (retract ?f1)
   (retract ?f2)
   (pop-focus)
