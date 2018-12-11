@@ -2,7 +2,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defglobal ?*CHECKERS* = 3) ;Filas de fichas para cada jugador. Predeterminadas: 3
 (defglobal ?*WHITE* = 1) ;Signo de las fichas negras.
 (defglobal ?*BLACK* = -1)  ;Signo de las fichas blancas
-(defglobal ?*DEPTH* = 6)  ;Profundidad a la que llega el árbol de búsqueda.
+(defglobal ?*DEPTH* = 4)  ;Profundidad a la que llega el árbol de búsqueda.
 
 (defglobal ?*NEWID* = 0) ;Almacena el último id que se ha dado a un nodo del arbol.
 
@@ -581,7 +581,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     			(bind ?heur nil)
           (bind ?cut FALSE)
     		)
-        (assert (node (id ?*NEWID*) (father ?father) (board ?tmp_board) (move (append ?moves ?kill)) (value ?heur) (depth (+ ?depth 1)) (cut ?cut )))
+        (assert (node (id ?*NEWID*) (father ?father) (board ?tmp_board) (move (append ?moves ?kill)) (value ?heur) (depth (+ ?depth 1)) (cut ?cut) (visited FALSE)))
       )
     )
   )
@@ -593,7 +593,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (not (alfabeta))
   (not (endturn))
 =>
-  ;(halt) ;Debug
+  (halt) ;Debug
   (assert (alfabeta))
 )
 
@@ -666,15 +666,22 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (not (endturn))
   ?f2 <- (board $?b)
   (node (depth 0) (value ?v1))
-  (node (depth 1) (value ?v1) (move ?move) (board $?new_board))
+  (node (depth 1) (value ?v1) (move $?move) (board $?new_board))
 =>
-  (printout t "Movimiento del ordenador: " ?move crlf)
+  (printout t "Movimiento del ordenador: " $?move crlf)
   (retract ?f1)
   (retract ?f2)
   (assert (board ?new_board))
   (assert (endturn))
-  ;(halt) ;Debug
+  (halt) ;Debug
 )
+
+(defrule COMPUTER::loles "Realiza el movimiento que haya calculado el árbol."
+  (declare (salience 0))
+  (alfabeta)
+=>
+  (printout t "AY LMAO" crlf)
+) ;Debug
 
 (defrule COMPUTER::final_clear "Limpia el árbol de búsqueda después de acabar ésta."
   (declare (salience 20))
