@@ -676,13 +676,6 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (halt) ;Debug
 )
 
-(defrule COMPUTER::loles "Realiza el movimiento que haya calculado el árbol."
-  (declare (salience 0))
-  (alfabeta)
-=>
-  (printout t "AY LMAO" crlf)
-) ;Debug
-
 (defrule COMPUTER::final_clear "Limpia el árbol de búsqueda después de acabar ésta."
   (declare (salience 20))
   (endturn)
