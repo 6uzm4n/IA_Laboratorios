@@ -81,23 +81,6 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 	(return)
 )
 
-(deffunction MAIN::heur_value (?board)
-  ;Dado un tablero devuelve un valor heurístico que representa el estado del tablero. Cuanto mayor sea,
-  ;se considera que el tablero es más beneficioso para las fichas blancas. De la misma forma, cuanto
-  ;menor sea se considerará mejor tablero para las negras.
-  (bind ?heur 0)
-  (foreach ?piece ?board
-    (bind ?heur (+ ?heur (* 100 ?piece)))
-  )
-  (if (and (not (member$ -1 ?board)) (not (member$ -2 ?board))) then
-    (return 999999)
-  )
-  (if (and (not (member$ 1 ?board)) (not (member$ 2 ?board))) then
-    (return -999999)
-  )
-  (return ?heur)
-)
-
 (defrule MAIN::start "Crea el tablero y da comienzo a la partida."
   ;Sin condiciones
 =>
@@ -310,6 +293,45 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (return ?moves)
 )
 
+(deffunction MAIN::check_end (?board)
+  ;Dado un tablero devuelve 1/-1 en caso de que el tablero constituya un final de la partida y FALSE en caso contrario.
+  ;En caso de devolver 1, ganan las blancas. Si devuelve -1 ganan las negras.
+  (if (and (not (member$ -1 ?board)) (not (member$ -2 ?board))) then
+    (return 1)
+  )
+  (if (and (= 0 (length$ (check_kills ?board -1))) (= 0 (length$ (check_moves ?board -1)))) then
+    (return 1)
+  )
+  (if (and (not (member$ 1 ?board)) (not (member$ 2 ?board))) then
+    (return -1)
+  )
+  (if (and (= 0 (length$ (check_kills ?board 1))) (= 0 (length$ (check_moves ?board 1)))) then
+    (return -1)
+  )
+  (return FALSE)
+)
+
+(deffunction MAIN::heur_value (?board)
+  ;Dado un tablero devuelve un valor heurístico que representa el estado del tablero. Cuanto mayor sea,
+  ;se considera que el tablero es más beneficioso para las fichas blancas. De la misma forma, cuanto
+  ;menor sea se considerará mejor tablero para las negras.
+  (bind ?heur 0)
+  (if (eq 1 (check_end ?board)) then
+    (return 999999)
+  )
+  (if (eq -1 (check_end ?board)) then
+    (return -999999)
+  )
+  (foreach ?piece ?board
+    (bind ?heur (+ ?heur (* 1000 ?piece)))
+  )
+  (bind ?heur (+ ?heur (* 100 (length$ (check_kills ?board 1)))))
+  (bind ?heur (- ?heur (* 100 (length$ (check_kills ?board -1)))))
+  (bind ?heur (+ ?heur (* 10 (length$ (check_moves ?board 1)))))
+  (bind ?heur (- ?heur (* 10 (length$ (check_moves ?board -1)))))
+  (return ?heur)
+)
+
 (deffunction MAIN::consecutive (?move1 ?move2)
   ;Dados dos movimientos, devuelve TRUE si son consecutivos y FALSE si no lo son.
   (bind ?y (nth$ 3 (explode$ ?move1)))
@@ -365,6 +387,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (if (and (member$ ?move ?pos_moves) (< 0 (length$ ?pos_kills))) then
     ;Si intenta mover pero puede comer.
     (printout t "Estas obligado a comer una ficha." crlf)
+    (printout t "Posibles movimientos: " ?pos_kills crlf) ;Debug
     (return (create$ -1))
   )
   (if (member$ ?move ?pos_moves) then
@@ -374,6 +397,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     (return (create$ 1 ?board))
   )
   (printout t "Introduce un movimiento valido." crlf)
+  (printout t "Posibles movimientos: " ?pos_moves ?pos_kills crlf) ;Debug
   (return (create$ -1))
 )
 
@@ -410,8 +434,9 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   ?f2 <- (board $?b)
 =>
   (print_board ?b)
-  (if (or (and (= 0 (length$ (check_moves ?b ?c))) (= 0 (length$ (check_kills ?b ?c)))) (and (not (member$ ?c ?b)) (not (member$ (* 2 ?c) ?b)))) then
-    (assert (victory (* -1 ?c)))
+  (bind ?v (check_end ?b))
+  (if ?v then
+    (assert (victory ?v))
     (return)
   )
   (printout t "Introduce tu movimiento JUGADOR." crlf)
@@ -466,16 +491,24 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defrule COMPUTER::start_tree "Inicializa el árbol de búsqueda de movimientos."
   (declare (salience 25))
   (not (alfabeta))
+  (not (endturn))
   (board $?b)
 =>
+  (print_board ?b)
+  (bind ?v (check_end ?b))
+  (if ?v then
+    (assert (victory ?v))
+    (return)
+  )
   (assert (node (id 0) (father nil) (board $?b) (move "") (value nil) (depth 0) (cut FALSE)))
 )
 
 (defrule COMPUTER::build_tree "Construye el árbol de búsqueda de movimientos."
   (declare (salience 25))
   (not (alfabeta))
+  (not (endturn))
   (computer_color ?cc)
-  ?f <- (node (id ?id) (board $?b) (depth ?d))
+  ?f <- (node (id ?id) (board $?b) (depth ?d) (cut FALSE))
   (test (< ?d ?*DEPTH*))
 =>
   (switch (mod ?d 2)
@@ -489,13 +522,15 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     (foreach ?move ?move_list
       (bind ?tmp_board (delete$ (move $?b ?turn ?move) 1 1))
       (bind ?tmp_board (crown ?tmp_board))
-  		(if (= (+ ?d 1) ?*DEPTH*) then
-  			(bind ?heur (heur_value ?tmp_board))
-  		else
-  			(bind ?heur nil)
-  		)
+      (if (or (= (+ ?d 1) ?*DEPTH*) (check_end ?tmp_board)) then
+        (bind ?heur (heur_value ?tmp_board))
+        (bind ?cut TRUE)
+      else
+        (bind ?heur nil)
+        (bind ?cut FALSE)
+      )
       (bind ?*NEWID* (+ ?*NEWID* 1))
-  		(assert (node (id ?*NEWID*) (father ?id) (board ?tmp_board) (move ?move) (value ?heur) (depth (+ ?d 1)) (cut FALSE) (visited FALSE)))
+  		(assert (node (id ?*NEWID*) (father ?id) (board ?tmp_board) (move ?move) (value ?heur) (depth (+ ?d 1)) (cut ?cut) (visited FALSE)))
     )
   else
     ;Si se puede comer
@@ -508,13 +543,15 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
       else
         ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
         (bind ?tmp_board (crown ?tmp_board))
-    		(if (= (+ ?d 1) ?*DEPTH*) then
+    		(if (or (= (+ ?d 1) ?*DEPTH*) (check_end ?tmp_board)) then
     			(bind ?heur (heur_value ?tmp_board))
+          (bind ?cut TRUE)
     		else
     			(bind ?heur nil)
+          (bind ?cut FALSE)
     		)
         (bind ?*NEWID* (+ ?*NEWID* 1))
-        (assert (node (id ?*NEWID*) (father ?id) (board ?tmp_board) (move ?kill) (value ?heur) (depth (+ ?d 1)) (cut FALSE) (visited FALSE)))
+        (assert (node (id ?*NEWID*) (father ?id) (board ?tmp_board) (move ?kill) (value ?heur) (depth (+ ?d 1)) (cut ?cut) (visited FALSE)))
       )
     )
   )
@@ -537,12 +574,14 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
         ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
         (bind ?*NEWID* (+ ?*NEWID* 1))
         (bind ?tmp_board (crown ?tmp_board))
-        (if (= (+ ?depth 1) ?*DEPTH*) then
+        (if (or (= (+ ?depth 1) ?*DEPTH*) (check_end ?tmp_board)) then
     			(bind ?heur (heur_value ?tmp_board))
+          (bind ?cut TRUE)
     		else
     			(bind ?heur nil)
+          (bind ?cut FALSE)
     		)
-        (assert (node (id ?*NEWID*) (father ?father) (board ?tmp_board) (move (append ?moves ?kill)) (value ?heur) (depth (+ ?depth 1)) (cut FALSE)))
+        (assert (node (id ?*NEWID*) (father ?father) (board ?tmp_board) (move (append ?moves ?kill)) (value ?heur) (depth (+ ?depth 1)) (cut ?cut )))
       )
     )
   )
@@ -551,14 +590,16 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defrule COMPUTER::alfabeta "Marca el fin de la construcción del árbol y comienza el algoritmo alfabeta."
   (declare (salience 24))
-  (board $?b)
+  (not (alfabeta))
+  (not (endturn))
 =>
-  ;(halt)
+  ;(halt) ;Debug
   (assert (alfabeta))
 )
 
 (defrule COMPUTER::heur_expand "Expande el heuristico."
 	(declare (salience 15))
+  (alfabeta)
 	?f1 <- (node (id ?id1) (depth ?d1) (value ?v1) (cut FALSE))
 	?f2 <- (node (id ?id2) (depth ?d2) (value ?v2) (father ?id1) (visited FALSE))
   (not (node (father ?id2) (visited FALSE)))
@@ -582,6 +623,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defrule COMPUTER::cut_max "Poda el árbol bajo nodos max."
 	(declare (salience 20))
+  (alfabeta)
 	(node (id ?id) (depth ?d1) (value ?v1))
 	?f <- (node (depth ?d2) (value ?v2) (father ?id) (cut FALSE) (visited FALSE))
   (test (and (not (eq ?v1 nil)) (not (eq ?v2 nil)) (< ?d2 ?*DEPTH*) (< ?v2 ?v1) (= 0 (mod ?d1 2))))
@@ -591,6 +633,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defrule COMPUTER::cut_min "Poda el árbol bajo nodos min."
 	(declare (salience 20))
+  (alfabeta)
 	(node (id ?id1) (depth ?d1) (value ?v1))
   ?f <- (node (depth ?d2) (value ?v2) (father ?id1) (cut FALSE) (visited FALSE))
   (test (and (not (eq ?v1 nil)) (not (eq ?v2 nil)) (< ?d2 ?*DEPTH*) (> ?v2 ?v1) (= 1 (mod ?d1 2))))
@@ -600,6 +643,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defrule COMPUTER::cut_clear "Elimina las hojas del arbol de búsqueda bajo un nodo cortado."
   (declare (salience 20))
+  (alfabeta)
   (node (id ?id1) (cut TRUE))
   ?f <- (node (father ?id1) (visited FALSE))
 =>
@@ -608,6 +652,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defrule COMPUTER::cut_orphan "Elimina los nodos huérfano."
   (declare (salience 20))
+  (alfabeta)
   ?f <- (node (father ?id1))
   (not (node (id ?id1)))
   (test (not (eq nil ?id1)))
@@ -617,15 +662,18 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defrule COMPUTER::cpu_move "Realiza el movimiento que haya calculado el árbol."
   (declare (salience 10))
-  (alfabeta)
-  ?f <- (board $?b)
+  ?f1 <- (alfabeta)
+  (not (endturn))
+  ?f2 <- (board $?b)
   (node (depth 0) (value ?v1))
   (node (depth 1) (value ?v1) (move ?move) (board $?new_board))
 =>
   (printout t "Movimiento del ordenador: " ?move crlf)
-  (retract ?f)
+  (retract ?f1)
+  (retract ?f2)
   (assert (board ?new_board))
   (assert (endturn))
+  ;(halt) ;Debug
 )
 
 (defrule COMPUTER::final_clear "Limpia el árbol de búsqueda después de acabar ésta."
@@ -638,11 +686,9 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defrule COMPUTER::end_turn "Termina el turno del ordenador."
   (declare (salience 10))
-  ?f1 <- (alfabeta)
   ?f2 <- (endturn)
 =>
   (bind ?*NEWID* 0)
-  (retract ?f1)
   (retract ?f2)
   (pop-focus)
   (focus PLAYER)
