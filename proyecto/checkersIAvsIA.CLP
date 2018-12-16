@@ -66,7 +66,7 @@
 						(case 1 then (printout t "o"))
 						(case -1 then (printout t "x"))
             (case 2 then (printout t "@"))
-            (case -2 then (printout t "X"))
+            (case -2 then (printout t "%"))
 						)
 					(bind ?i (+ ?i 1))
 				else

@@ -1,4 +1,4 @@
-CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
+﻿CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defglobal ?*CHECKERS* = 3) ;Filas de fichas para cada jugador. Predeterminadas: 3
 (defglobal ?*WHITE* = 1) ;Signo de las fichas negras.
 (defglobal ?*BLACK* = -1)  ;Signo de las fichas blancas
@@ -69,8 +69,8 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 						(case 0 then (printout t " "))
 						(case 1 then (printout t "o")) ;Caracter para fichas blancas
 						(case -1 then (printout t "x")) ;Caracter para fichas negras
-            (case 2 then (printout t "@")) ;Caracter para damas blancas
-            (case -2 then (printout t "%")) ;Caracter para damas negras
+            					(case 2 then (printout t "@")) ;Caracter para damas blancas
+          					(case -2 then (printout t "%")) ;Caracter para damas negras
 						)
 					(bind ?i (+ ?i 1))
 				else
