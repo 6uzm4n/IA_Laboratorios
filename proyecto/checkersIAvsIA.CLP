@@ -1,8 +1,8 @@
-heur_value1CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
+﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defglobal ?*CHECKERS* = 3) ;Filas de fichas para cada jugador. Predeterminadas: 3
 (defglobal ?*WHITE* = 1) ;Signo de las fichas negras.
 (defglobal ?*BLACK* = -1)  ;Signo de las fichas blancas
-(defglobal ?*DEPTH* = 5)  ;Profundidad a la que llega el árbol de búsqueda.
+(defglobal ?*DEPTH* = 6)  ;Profundidad a la que llega el árbol de búsqueda.
 
 (defglobal ?*NEWID* = 0) ;Almacena el último id que se ha dado a un nodo del arbol.
 
@@ -84,6 +84,8 @@ heur_value1CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeter
 (defrule MAIN::start "Crea el tablero y da comienzo a la partida."
   ;Sin condiciones
 =>
+  (set-strategy depth)
+
   (bind ?s -1) ;Filas del tablero
   (bind ?c -1) ;Filas de fichas
   (bind ?f 0) ;Color de fichas del jugador
@@ -323,12 +325,12 @@ heur_value1CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeter
     (return -999999)
   )
   (foreach ?piece ?board
-    (bind ?heur (+ ?heur (* 1000 ?piece)))
+    (bind ?heur (+ ?heur (* 10000 ?piece)))
   )
-  (bind ?heur (+ ?heur (* 100 (length$ (check_kills ?board 1)))))
-  (bind ?heur (- ?heur (* 100 (length$ (check_kills ?board -1)))))
-  (bind ?heur (+ ?heur (* 10 (length$ (check_moves ?board 1)))))
-  (bind ?heur (- ?heur (* 10 (length$ (check_moves ?board -1)))))
+  (bind ?heur (+ ?heur (* 1000 (length$ (check_kills ?board 1)))))
+  (bind ?heur (- ?heur (* 1000 (length$ (check_kills ?board -1)))))
+  ;(bind ?heur (+ ?heur (* 1 (length$ (check_moves ?board 1)))))
+  ;(bind ?heur (- ?heur (* 1 (length$ (check_moves ?board -1)))))
   (return ?heur)
 )
 
@@ -344,12 +346,12 @@ heur_value1CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeter
     (return -999999)
   )
   (foreach ?piece ?board
-    (bind ?heur (+ ?heur (* 100 ?piece)))
+    (bind ?heur (+ ?heur (* 10000 ?piece)))
   )
   (bind ?heur (+ ?heur (* 1000 (length$ (check_kills ?board 1)))))
   (bind ?heur (- ?heur (* 1000 (length$ (check_kills ?board -1)))))
-  (bind ?heur (+ ?heur (* 10 (length$ (check_moves ?board 1)))))
-  (bind ?heur (- ?heur (* 10 (length$ (check_moves ?board -1)))))
+  (bind ?heur (- ?heur (* 1 (length$ (check_moves ?board 1)))))
+  (bind ?heur (+ ?heur (* 1 (length$ (check_moves ?board -1)))))
   (return ?heur)
 )
 
@@ -731,7 +733,7 @@ heur_value1CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeter
       (bind ?tmp_board (delete$ (move $?b ?turn ?move) 1 1))
       (bind ?tmp_board (crown ?tmp_board))
       (if (or (= (+ ?d 1) ?*DEPTH*) (check_end ?tmp_board)) then
-        (bind ?heur (* ?cc (heur_value1 ?tmp_board)))
+        (bind ?heur (* ?cc (heur_value2 ?tmp_board)))
         (bind ?cut TRUE)
       else
         (bind ?heur nil)
@@ -752,7 +754,7 @@ heur_value1CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeter
         ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
         (bind ?tmp_board (crown ?tmp_board))
     		(if (or (= (+ ?d 1) ?*DEPTH*) (check_end ?tmp_board)) then
-    			(bind ?heur (* ?cc (heur_value1 ?tmp_board)))
+    			(bind ?heur (* ?cc (heur_value2 ?tmp_board)))
           (bind ?cut TRUE)
     		else
     			(bind ?heur nil)
@@ -784,7 +786,7 @@ heur_value1CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeter
         (bind ?*NEWID* (+ ?*NEWID* 1))
         (bind ?tmp_board (crown ?tmp_board))
         (if (or (= (+ ?depth 1) ?*DEPTH*) (check_end ?tmp_board)) then
-    			(bind ?heur (* ?cc (heur_value1 ?tmp_board)))
+    			(bind ?heur (* ?cc (heur_value2 ?tmp_board)))
           (bind ?cut TRUE)
     		else
     			(bind ?heur nil)

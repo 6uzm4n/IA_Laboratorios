@@ -6,6 +6,10 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (defglobal ?*NEWID* = 0) ;Almacena el último id que se ha dado a un nodo del arbol.
 
+
+;==================================================================================================
+; MODULO MAIN
+;==================================================================================================
 (defmodule MAIN (export ?ALL))
 
 (deffunction MAIN::append (?multicampo ?simple)
@@ -50,7 +54,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 	;	#######
 	;	#     #		- 7 caracteres en horizontal
 	;	#  O  #		- 5 caracteres en vertical
-	;	#     #		- El caracter central representa el contenido (" ", "@" o "O")
+	;	#     #		- El caracter central representa el contenido (" ", "o", "x", "%" o "@")
 	;	#######
 
 	;(clear-window)
@@ -63,10 +67,10 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 				(if (and (= 0 (mod ?y 2)) (= 0 (mod ?x 3))) then
 					(switch (nth$ ?i ?board)
 						(case 0 then (printout t " "))
-						(case 1 then (printout t "o"))
-						(case -1 then (printout t "x"))
-            (case 2 then (printout t "@"))
-            (case -2 then (printout t "X"))
+						(case 1 then (printout t "o")) ;Caracter para fichas blancas
+						(case -1 then (printout t "x")) ;Caracter para fichas negras
+            (case 2 then (printout t "@")) ;Caracter para damas blancas
+            (case -2 then (printout t "%")) ;Caracter para damas negras
 						)
 					(bind ?i (+ ?i 1))
 				else
@@ -116,7 +120,6 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
       (focus PLAYER)
     )
   )
-  (assert (turn 1))
   (assert (board (initialize)))
 )
 
@@ -142,10 +145,10 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
       )
       (if (= 2 (* (get_piece ?board ?y ?x) ?player)) then
         ;Calcula movimiento de damas.
-        (bind ?bl 0) ;Flag para cuando no puede seguir buscando por abajo-izquierda
-        (bind ?br 0) ;Flag para cuando no puede seguir buscando por abajo-derecha
-        (bind ?tl 0) ;Flag para cuando no puede seguir buscando por arriba-izquierda
-        (bind ?tr 0) ;Flag para cuando no puede seguir buscando por arriba-derecha
+        (bind ?bl 0) ;Flag para controlar la búsqueda por abajo-izquierda
+        (bind ?br 0) ;Flag para controlar la búsqueda por abajo-derecha
+        (bind ?tl 0) ;Flag para controlar la búsqueda por arriba-izquierda
+        (bind ?tr 0) ;Flag para controlar la búsqueda por arriba-derecha
         (loop-for-count (?i 1 (max ?x ?y (- ?*SIZE* ?x) (- ?*SIZE* ?y))) do
           (if (and (>= ?*SIZE* (+ ?y ?i))  (<= 1 (- ?x ?i)) (> 2 ?bl)) then
             ;Abajo-izquierda
@@ -159,6 +162,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
                 (bind ?bl 2)
               else
                 (if (and (> 0 (* ?player (get_piece ?board (+ ?y ?i) (- ?x ?i)))) (= 0 ?bl)) then
+                  ;Si encuentra una ficha enemiga y el flag está a 0, lo pone a 1 y puede comer.
                   (bind ?bl 1)
                 )
               )
@@ -176,6 +180,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
                 (bind ?br 2)
               else
                 (if (and (> 0 (* ?player (get_piece ?board (+ ?y ?i) (+ ?x ?i)))) (= 0 ?br)) then
+                  ;Si encuentra una ficha enemiga y el flag está a 0, lo pone a 1 y puede comer.
                   (bind ?br 1)
                 )
               )
@@ -211,6 +216,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
                 (bind ?tr 2)
               else
                 (if (and (> 0 (* ?player (get_piece ?board (- ?y ?i) (+ ?x ?i)))) (= 0 ?tr)) then
+                  ;Si encuentra una ficha enemiga y el flag está a 0, lo pone a 1 y puede comer.
                   (bind ?tr 1)
                 )
               )
@@ -297,15 +303,19 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   ;Dado un tablero devuelve 1/-1 en caso de que el tablero constituya un final de la partida y FALSE en caso contrario.
   ;En caso de devolver 1, ganan las blancas. Si devuelve -1 ganan las negras.
   (if (and (not (member$ -1 ?board)) (not (member$ -2 ?board))) then
+    ;Comprueba si no existen fichas negras en el tablero.
     (return 1)
   )
   (if (and (= 0 (length$ (check_kills ?board -1))) (= 0 (length$ (check_moves ?board -1)))) then
+    ;Comprueba si no existen movimientos posibles para las fichas negras.
     (return 1)
   )
   (if (and (not (member$ 1 ?board)) (not (member$ 2 ?board))) then
+    ;Comprueba si no existen fichas blancas en el tablero.
     (return -1)
   )
   (if (and (= 0 (length$ (check_kills ?board 1))) (= 0 (length$ (check_moves ?board 1)))) then
+    ;Comprueba si no existen movimientos posibles para las fichas blancas.
     (return -1)
   )
   (return FALSE)
@@ -334,6 +344,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 
 (deffunction MAIN::consecutive (?move1 ?move2)
   ;Dados dos movimientos, devuelve TRUE si son consecutivos y FALSE si no lo son.
+  ;Por ej. se consideran consecutivos los siguientes movimientos: "1 2 2 1" "2 1 3 2"
   (bind ?y (nth$ 3 (explode$ ?move1)))
   (bind ?x (nth$ 4 (explode$ ?move1)))
   (bind ?ny (nth$ 1 (explode$ ?move2)))
@@ -354,6 +365,8 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 )
 
 (deffunction MAIN::move (?board ?player ?move)
+  ;Dado un tablero, un jugador y un movimiento, devuelve el tablero resultante tras realizar dicho movimiento.
+  ;Además, unido al tabelro devuelve 1 en caso de que sea un movimiento normal y 2 si come una ficha.
   (bind ?y (nth$ 1 (explode$ ?move)))
   (bind ?x (nth$ 2 (explode$ ?move)))
   (bind ?ny (nth$ 3 (explode$ ?move)))
@@ -361,7 +374,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (bind ?pos_kills (check_kills ?board ?player))
   (bind ?pos_moves (check_moves ?board ?player))
   (if (member$ ?move ?pos_kills) then
-    ;Si come una ficha
+    ;Si come una ficha:
     (bind ?i 1)
     ;Define la diagonal en la que come según el movimiento.
     (if (< ?y ?ny) then
@@ -375,46 +388,54 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
       (bind ?ix -1)
     )
     (while (not (= ?ny (+ ?y (* ?i ?iy)))) do
+      ;Elimina toda ficha que se encuentre entre la casilla inicial y la final (come fichas).
       (bind ?board (replace$ ?board (coord_to_board (+ ?y (* ?i ?iy)) (+ ?x (* ?i ?ix)))
                                         (coord_to_board (+ ?y (* ?i ?iy)) (+ ?x (* ?i ?ix))) 0))
       (bind ?i (+ ?i 1))
     )
-    (bind ?board (replace$ ?board (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (* 2 ?player)))
+    ;Mueve la ficha de la posición inicial a la posición objetivo.
     (bind ?board (replace$ ?board (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (get_piece ?board ?y ?x)))
+    ;Elimina la ficha de la posición inicial.
     (bind ?board (replace$ ?board (coord_to_board ?y ?x) (coord_to_board ?y ?x) 0))
     (return (create$ 2 ?board))
   )
   (if (and (member$ ?move ?pos_moves) (< 0 (length$ ?pos_kills))) then
-    ;Si intenta mover pero puede comer.
+    ;Si intenta mover pero puede comer fichas se muestra un mensaje de error.
     (printout t "Estas obligado a comer una ficha." crlf)
     (printout t "Posibles movimientos: " ?pos_kills crlf) ;Debug
     (return (create$ -1))
   )
   (if (member$ ?move ?pos_moves) then
-    ;Si mueve una ficha.
+    ;Si mueve una ficha:
+    ;Mueve la ficha de la posición inicial a la posición objetivo.
     (bind ?board (replace$ ?board (coord_to_board ?ny ?nx) (coord_to_board ?ny ?nx) (get_piece ?board ?y ?x)))
+    ;Elimina la ficha de la posición inicial.
     (bind ?board (replace$ ?board (coord_to_board ?y ?x) (coord_to_board ?y ?x) 0))
     (return (create$ 1 ?board))
   )
+  ;Si el movimiento no es válido se muestra un mensaje de error.
   (printout t "Introduce un movimiento valido." crlf)
   (printout t "Posibles movimientos: " ?pos_moves ?pos_kills crlf) ;Debug
   (return (create$ -1))
 )
 
-
 (deffunction MAIN::crown (?board)
+  ;Comprueba el tablero que se pasa como parámetro y transforma las fichas en dama si es posible.
+  ;Será posible transformarla cuando estas estén al final del tablero, dependiendo del color.
   (loop-for-count (?x 1 ?*SIZE*) do
     (if (= 1 (get_piece ?board ?*SIZE* ?x)) then
+      ;Transforma las piezas blancas.
       (bind ?board (replace$ ?board (coord_to_board ?*SIZE* ?x) (coord_to_board ?*SIZE* ?x) 2))
     )
     (if (= -1 (get_piece ?board 1 ?x)) then
+      ;Transforma las piezas negras.
       (bind ?board (replace$ ?board (coord_to_board 1 ?x) (coord_to_board 1 ?x) -2))
     )
   )
   (return ?board)
 )
 
-(defrule MAIN::victory "Termina la partida."
+(defrule MAIN::victory "Termina la partida en caso de que un jugador marque la victoria."
   (victory ?v)
   (computer_color ?c)
 =>
@@ -425,20 +446,25 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (halt)
 )
 
+;==================================================================================================
+; MODULO DEL JUGADOR
+;==================================================================================================
 (defmodule PLAYER (import MAIN ?ALL))
 
 (defrule PLAYER::player_turn "Realiza el turno del jugador."
-  (declare (salience 10))
+  (declare (salience 100))
   (player_color ?c)
-  ?f1 <- (turn ?t)
-  ?f2 <- (board $?b)
+  ?f <- (board $?b)
 =>
+  ;Imprime el tablero al principio del turno.
   (print_board ?b)
+  ;Comprueba si se termina la partida.
   (bind ?v (check_end ?b))
   (if ?v then
     (assert (victory ?v))
     (return)
   )
+  ;Pide un movimiento al jugador hasta que este sea uno válido.
   (printout t "Introduce tu movimiento JUGADOR." crlf)
   (printout t "Introduce las coordenadas de la ficha quieres mover y las de la posicion objetivo (y1 x1 y2 x2)" crlf)
   (bind ?move_result (create$ -1))
@@ -447,26 +473,31 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     (bind ?move (readline))
     (bind ?move_result (move ?b ?c ?move))
     (if (< 0 (nth$ 1 ?move_result)) then
+      ;Si es un movimiento normal.
       (bind ?b (delete$ ?move_result 1 1))
     )
     (if (= 2 (nth$ 1 ?move_result)) then
+      ;Si se ha comido ficha en el movimiento, se comprueba si puede seguir comiendo.
       (bind ?keep_killing (keep_killing ?b ?c ?move))
       (if ?keep_killing then
+        ;Si se puede seguir comiendo se pide un nuevo movimiento al jugador.
         (print_board ?b)
         (printout t "Sigue comiendo JUGADOR..." crlf)
       )
     )
   )
+  ;Se tranforman en damas las fichas correspondientes.
   (bind ?b (crown ?b))
-  (retract ?f1)
-  (retract ?f2)
-  (assert (turn (+ ?t 1)))
+  (retract ?f)
   (assert (board ?b))
+  ;Cambia el foco de la ejecución al ordenador.
   (pop-focus)
   (focus COMPUTER)
 )
 
-
+;==================================================================================================
+; MODULO DEL ORDENADOR
+;==================================================================================================
 (defmodule COMPUTER (import MAIN ?ALL))
 
 (deftemplate COMPUTER::node
@@ -494,12 +525,15 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (not (endturn))
   (board $?b)
 =>
+  ;Imprime el tablero al principio del turno.
   (print_board ?b)
+  ;Comprueba si se termina la partida.
   (bind ?v (check_end ?b))
   (if ?v then
     (assert (victory ?v))
     (return)
   )
+  ;Inicializa el nodo padre del árbol.
   (assert (node (id 0) (father nil) (board $?b) (move "") (value nil) (depth 0) (cut FALSE)))
 )
 
@@ -518,10 +552,11 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (bind ?move_list (check_moves $?b ?turn))
   (bind ?kill_list (check_kills $?b ?turn))
   (if (= 0 (length$ ?kill_list)) then
-    ;Si no se puede comer
+    ;Si no se puede comer se recorre la lista de movimientos normales:
     (foreach ?move ?move_list
       (bind ?tmp_board (delete$ (move $?b ?turn ?move) 1 1))
       (bind ?tmp_board (crown ?tmp_board))
+      ;Calculamos su heurístico.
       (if (or (= (+ ?d 1) ?*DEPTH*) (check_end ?tmp_board)) then
         (bind ?heur (* ?cc (heur_value ?tmp_board)))
         (bind ?cut TRUE)
@@ -533,16 +568,17 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   		(assert (node (id ?*NEWID*) (father ?id) (board ?tmp_board) (move ?move) (value ?heur) (depth (+ ?d 1)) (cut ?cut) (visited FALSE)))
     )
   else
-    ;Si se puede comer
+    ;Si se puede comer se recorre la lista de movimientos con comida:
     (foreach ?kill ?kill_list
       (bind ?tmp_board (delete$ (move $?b ?turn ?kill) 1 1))
       (bind ?keep_killing (keep_killing ?tmp_board ?turn ?kill))
       (if ?keep_killing then
-        ;En caso de que se pueda seguir comiendo lo checkeamos en otro método.
+        ;En caso de que se pueda seguir comiendo lo almacenamos para checkearlo en otro método.
         (assert (combo_move (board ?tmp_board) (depth ?d) (turn ?turn) (moves (create$ ?kill)) (father ?id)))
       else
         ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
         (bind ?tmp_board (crown ?tmp_board))
+        ;Calculamos su heurístico.
     		(if (or (= (+ ?d 1) ?*DEPTH*) (check_end ?tmp_board)) then
     			(bind ?heur (* ?cc (heur_value ?tmp_board)))
           (bind ?cut TRUE)
@@ -562,10 +598,11 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (computer_color ?cc)
   ?f <- (combo_move (board $?board) (turn ?turn) (depth ?depth) (moves $?moves) (father ?father))
 =>
+  ;Guardamos la lista de posibles movimientos.
   (bind ?kill_list (check_kills ?board ?turn))
   (foreach ?kill ?kill_list
     (if (consecutive (nth$ (length$ $?moves) $?moves) ?kill) then
-      ;Si el movimiento es consecutivo al último que se ha realizado
+      ;Si el movimiento es consecutivo al último que se ha realizado este se ejecuta
       (bind ?tmp_board (delete$ (move ?board ?turn ?kill) 1 1))
       (bind ?keep_killing (keep_killing ?tmp_board ?turn ?kill))
       (if ?keep_killing then
@@ -573,8 +610,8 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
         (assert (combo_move (board ?tmp_board) (depth ?depth) (turn ?turn) (moves (append ?moves ?kill)) (father ?father)))
       else
         ;Si no se puede seguir comiendo guardamos el movimiento en el arbol.
-        (bind ?*NEWID* (+ ?*NEWID* 1))
         (bind ?tmp_board (crown ?tmp_board))
+        ;Calculamos su heurístico.
         (if (or (= (+ ?depth 1) ?*DEPTH*) (check_end ?tmp_board)) then
     			(bind ?heur (* ?cc (heur_value ?tmp_board)))
           (bind ?cut TRUE)
@@ -582,6 +619,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
     			(bind ?heur nil)
           (bind ?cut FALSE)
     		)
+        (bind ?*NEWID* (+ ?*NEWID* 1))
         (assert (node (id ?*NEWID*) (father ?father) (board ?tmp_board) (move (append ?moves ?kill)) (value ?heur) (depth (+ ?depth 1)) (cut ?cut) (visited FALSE)))
       )
     )
@@ -594,7 +632,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (not (alfabeta))
   (not (endturn))
 =>
-  (halt) ;Debug
+  ;(halt) ;Debug
   (assert (alfabeta))
 )
 
@@ -606,15 +644,19 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (not (node (father ?id2) (visited FALSE)))
   (test (not (eq ?v2 nil)))
 =>
+  ;Marcamos el hijo como visitado
   (modify ?f2 (visited TRUE))
+  ;Si el padre no tiene valor, le asignamos el del hijo.
 	(if (eq ?v1 nil) then
 		(modify ?f1 (value ?v2))
 	else
 		(if (= 0 (mod ?d1 2)) then
+      ;Si el padre es un nodo max y el valor del hijo es mayor, se sube.
 			(if (< ?v1 ?v2) then
 				(modify ?f1 (value ?v2))
 			)
 		else
+      ;Si el padre es un nodo min y el valor del hijo es menor, se sube.
 			(if (> ?v1 ?v2) then
 				(modify ?f1 (value ?v2))
 			)
@@ -642,7 +684,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (modify ?f (cut TRUE))
 )
 
-(defrule COMPUTER::cut_clear "Elimina las hojas del arbol de búsqueda bajo un nodo cortado."
+(defrule COMPUTER::cut_clear "Elimina las hojas no visitadas del arbol de búsqueda bajo un nodo cortado."
   (declare (salience 20))
   (alfabeta)
   (node (id ?id1) (cut TRUE))
@@ -651,7 +693,7 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (retract ?f)
 )
 
-(defrule COMPUTER::cut_orphan "Elimina los nodos huérfano."
+(defrule COMPUTER::cut_orphan "Elimina los nodos que quedan huérfanos tras otros borrados."
   (declare (salience 20))
   (alfabeta)
   ?f <- (node (father ?id1))
@@ -664,7 +706,6 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
 (defrule COMPUTER::cpu_move "Realiza el movimiento que haya calculado el árbol."
   (declare (salience 10))
   ?f1 <- (alfabeta)
-  (not (endturn))
   ?f2 <- (board $?b)
   (node (depth 0) (value ?v1))
   (node (depth 1) (value ?v1) (move $?move) (board $?new_board))
@@ -674,11 +715,11 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (retract ?f2)
   (assert (board ?new_board))
   (assert (endturn))
-  (halt) ;Debug
+  ;(halt) ;Debug
 )
 
-(defrule COMPUTER::final_clear "Limpia el árbol de búsqueda después de acabar ésta."
-  (declare (salience 20))
+(defrule COMPUTER::final_clear "Elimina el árbol de búsqueda después de acabar ésta."
+  (declare (salience 25))
   (endturn)
   ?f <- (node)
 =>
@@ -689,8 +730,11 @@ CHECKERS﻿(defglobal ?*SIZE* = 8) ;Dimensiones del tablero. Predeterminadas: 8
   (declare (salience 10))
   ?f2 <- (endturn)
 =>
+  ;Reiniciamos el contador de nodos del árbol.
   (bind ?*NEWID* 0)
+  ;Eliminamos el hecho "endturn"
   (retract ?f2)
+  ;Cambiamos el foco de la ejecución al jugador.
   (pop-focus)
   (focus PLAYER)
 )
